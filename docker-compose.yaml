@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------
+  # 1. The Core Application
+  # ----------------------------------------
+  agentic-system:
+    container_name: rozbirnyk-agent
+    build:
+      context: .
+      dockerfile: apps/agentic_system/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - knowledge-service
+      - news-service
+    restart: unless-stopped
+
+  ui:
+    container_name: rozbirnyk-ui
+    build:
+      context: .
+      dockerfile: apps/ui/Dockerfile
+    ports:
+      - "8501:8501" # Default Streamlit port, change if using something else
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - agentic-system
+    restart: unless-stopped
+
+  # ----------------------------------------
+  # 2. The MCP Microservices
+  # ----------------------------------------
+  knowledge-service:
+    container_name: rozbirnyk-knowledge
+    build:
+      context: .
+      dockerfile: mcp_servers/knowledge_service/Dockerfile
+    ports:
+      - "8001:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  news-service:
+    container_name: rozbirnyk-news
+    build:
+      context: .
+      dockerfile: mcp_servers/news_service/Dockerfile
+    ports:
+      - "8002:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  opinion-service:
+    container_name: rozbirnyk-opinion
+    build:
+      context: .
+      dockerfile: mcp_servers/opinion_service/Dockerfile
+    ports:
+      - "8003:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  probability-service:
+    container_name: rozbirnyk-probability
+    build:
+      context: .
+      dockerfile: mcp_servers/probability_service/Dockerfile
+    ports:
+      - "8004:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
