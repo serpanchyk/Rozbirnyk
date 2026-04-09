@@ -1,0 +1,81 @@
+[project]
+name = "rozbirnyk"
+version = "0.1.0"
+description = "Rozbirnyk - multi-agent AI system that creates polytical forecasts based on news, probability websites, opinions from social media and knowledge from books."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+]
+
+[tool.uv]
+managed = true
+package = false
+
+[tool.uv.workspace]
+members = [
+    "apps/*",
+    "mcp_servers/*",
+    "packages/*"
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+    "mypy",
+    "pre-commit",
+    "pytest-cov>=7.1.0",
+    "pytest-asyncio>=1.3.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+ignore_missing_imports = true
+explicit_package_bases = true
+mypy_path = "apps/*/src:mcp_servers/*/src:packages/*/src"
+files = ["apps", "mcp_servers", "packages"]
+
+[[tool.mypy.overrides]]
+module = [
+    "*.tests.*"
+]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+warn_return_any = false
+
+[tool.pytest.ini_options]
+testpaths = ["apps", "mcp_servers", "packages"]
+addopts = """
+    -v
+    --cov=apps
+    --cov=mcp_servers
+    --cov=packages
+    --cov-report=term-missing
+    --cov-fail-under=80
+"""
+asyncio_mode = "auto"
+
+pythonpath = [
+    "apps/agentic_system/src",
+    "apps/ui/src",
+    "mcp_servers/knowledge_service/src",
+    "mcp_servers/news_service/src",
+    "mcp_servers/opinion_service/src",
+    "mcp_servers/probability_service/src",
+    "packages/common/src"
+]
+
+[tool.coverage.run]
+omit = [
+    "*/tests/*",
+    "*__init__.py"
+]
