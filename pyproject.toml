@@ -7,9 +7,15 @@ requires-python = ">=3.12"
 dependencies = [
 ]
 
+[tool.uv]
+managed = true
+package = false
+
 [tool.uv.workspace]
 members = [
-    "apps/agentic_system",
+    "apps/*",
+    "mcp_servers/*",
+    "packages/*"
 ]
 
 [dependency-groups]
@@ -18,11 +24,41 @@ dev = [
     "ruff",
     "mypy",
     "pre-commit",
-    "pytest"
+    "pytest-cov>=7.1.0",
 ]
 
 [tool.ruff]
 line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
 
 [tool.mypy]
 strict = true
+python_version = "3.12"
+ignore_missing_imports = true
+explicit_package_bases = true
+mypy_path = "apps/*/src:mcp_servers/*/src:packages/*/src"
+files = ["apps", "mcp_servers", "packages"]
+
+[[tool.mypy.overrides]]
+module = [
+    "*.tests.*"
+]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+warn_return_any = false
+
+[tool.pytest.ini_options]
+testpaths = ["apps", "mcp_servers", "packages"]
+addopts = """
+    -v
+    --cov=apps
+    --cov=mcp_servers
+    --cov=packages
+    --cov-report=term-missing
+    --cov-fail-under=80
+"""
+asyncio_mode = "auto"
