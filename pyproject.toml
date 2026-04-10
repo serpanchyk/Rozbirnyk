@@ -75,6 +75,7 @@ pythonpath = [
 ]
 
 [tool.coverage.run]
+data_file = ".pytest_cache/.coverage"
 omit = [
     "*/tests/*",
     "*__init__.py"
