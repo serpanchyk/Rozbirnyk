@@ -65,8 +65,9 @@ addopts = """
 asyncio_mode = "auto"
 
 pythonpath = [
-    "apps/agentic_system/src",
-    "apps/ui/src",
+    "apps/agent_service/src",
+    "apps/frontend/src",
+    "apps/backend/src",
     "mcp_servers/knowledge_service/src",
     "mcp_servers/news_service/src",
     "mcp_servers/opinion_service/src",

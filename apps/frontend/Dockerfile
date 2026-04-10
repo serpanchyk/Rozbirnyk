@@ -6,7 +6,7 @@ WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1
 
 RUN --mount=type=bind,source=.,target=/app \
-    uv sync --frozen --no-dev --no-editable --package rozbirnyk_ui \
+    uv sync --frozen --no-dev --no-editable --package rozbirnyk_frontend \
 
 # --- Stage 2: Runtime ---
 FROM python:3.12-slim-bookworm
@@ -15,8 +15,8 @@ WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
 
-COPY apps/ui/src ./apps/ui/src
+COPY apps/frontend/src ./apps/frontend/src
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-CMD ["python", "-m", "ui.main"]
+CMD ["python", "-m", "frontend.main"]
