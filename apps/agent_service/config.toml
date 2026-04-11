@@ -1,0 +1,7 @@
+[service]
+name = "agent_service"
+version = "0.1.0"
+port = 8001
+
+[logging]
+level = "INFO"

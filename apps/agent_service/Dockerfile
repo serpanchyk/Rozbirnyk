@@ -6,7 +6,7 @@ WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1
 
 RUN --mount=type=bind,source=.,target=/app \
-    uv sync --frozen --no-dev --no-editable --package rozbirnyk_knowledge_service \
+    uv sync --frozen --no-dev --no-editable --package rozbirnyk_agent_service \
 
 # --- Stage 2: Runtime ---
 FROM python:3.12-slim-bookworm
@@ -15,8 +15,8 @@ WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
 
-COPY mcp_servers/knowledge_service/src ./mcp_servers/knowledge_service/src
+COPY apps/agent_service/src ./apps/agent_service/src
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-CMD ["python", "-m", "knowledge_service.main"]
+CMD ["python", "-m", "agent_service.main"]
