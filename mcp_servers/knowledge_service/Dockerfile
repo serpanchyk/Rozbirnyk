@@ -15,7 +15,7 @@ WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
 
-COPY apps/knowledge_service/src ./apps/knowledge_service/src
+COPY mcp_servers/knowledge_service/src ./mcp_servers/knowledge_service/src
 
 ENV PATH="/app/.venv/bin:$PATH"
 

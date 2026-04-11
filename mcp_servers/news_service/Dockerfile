@@ -15,7 +15,7 @@ WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
 
-COPY apps/news_service/src ./apps/news_service/src
+COPY mcp_servers/news_service/src ./mcp_servers/news_service/src
 
 ENV PATH="/app/.venv/bin:$PATH"
 

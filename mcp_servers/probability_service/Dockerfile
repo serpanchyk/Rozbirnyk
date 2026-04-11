@@ -15,7 +15,7 @@ WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
 
-COPY apps/probability_service/src ./apps/probability_service/src
+COPY mcp_servers/probability_service/src ./mcp_servers/probability_service/src
 
 ENV PATH="/app/.venv/bin:$PATH"
 
