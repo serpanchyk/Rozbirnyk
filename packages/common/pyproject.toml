@@ -4,4 +4,10 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "python-json-logger>=4.1.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+    "toml",
 ]
+
+[tool.uv.sources]
+rozbirnyk-common = { path = ".", editable = true }

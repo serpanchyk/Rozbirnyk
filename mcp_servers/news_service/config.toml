@@ -1,0 +1,7 @@
+[service]
+name = "news_service"
+version = "0.1.0"
+port = 8003
+
+[logging]
+level = "INFO"

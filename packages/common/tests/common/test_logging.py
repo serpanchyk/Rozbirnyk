@@ -87,7 +87,11 @@ class TestLogging(unittest.TestCase):
 
         self.assertEqual(mock_handle.call_count, 1)
         log_record = mock_handle.call_args[0][0]
-        log_output = logger.handlers[0].formatter.format(log_record)
+
+        formatter = logger.handlers[0].formatter
+        assert formatter is not None
+
+        log_output = formatter.format(log_record)
         log_record_dict = json.loads(log_output)
 
         self.assertEqual(log_record_dict["name"], "output_test_service")
@@ -100,6 +104,19 @@ class TestLogging(unittest.TestCase):
         trace_id_var.set(None)
         session_id_var.set(None)
         user_id_var.set(None)
+
+    def test_logging_message_format(self) -> None:
+        """
+        Test the logging message format directly.
+        """
+        handler = logging.StreamHandler()
+        handler.setFormatter(ContextualJsonFormatter())
+        assert handler.formatter is not None
+        log_record = logging.LogRecord(
+            "test", logging.INFO, "test", 1, "test", None, None
+        )
+        result = handler.formatter.format(log_record)
+        assert '"message": "test"' in result
 
 
 if __name__ == "__main__":

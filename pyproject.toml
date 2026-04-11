@@ -1,4 +1,3 @@
-[project]
 name = "rozbirnyk"
 version = "0.1.0"
 description = "Rozbirnyk - multi-agent AI system that creates polytical forecasts based on news, probability websites, opinions from social media and knowledge from books."
@@ -25,7 +24,7 @@ dev = [
     "mypy",
     "pre-commit",
     "pytest-cov>=7.1.0",
-    "pytest-asyncio>=1.3.0",
+    "pytest-asyncio>=1.3.0"
 ]
 
 [tool.ruff]
@@ -40,7 +39,17 @@ strict = true
 python_version = "3.12"
 ignore_missing_imports = true
 explicit_package_bases = true
-mypy_path = "apps/*/src:mcp_servers/*/src:packages/*/src"
+namespace_packages = true
+mypy_path = [
+    "apps/agent_service/src",
+    "apps/frontend/src",
+    "apps/backend/src",
+    "mcp_servers/knowledge_service/src",
+    "mcp_servers/news_service/src",
+    "mcp_servers/opinion_service/src",
+    "mcp_servers/probability_service/src",
+    "packages/common/src"
+]
 files = ["apps", "mcp_servers", "packages"]
 
 [[tool.mypy.overrides]]
@@ -79,5 +88,6 @@ pythonpath = [
 data_file = ".pytest_cache/.coverage"
 omit = [
     "*/tests/*",
-    "*__init__.py"
+    "*__init__.py",
+    "*schema.py"
 ]

@@ -104,8 +104,15 @@ This rule is critical for reducing context usage and improving efficiency.
 - Async preferred in I/O and API layers
 - Keep dependencies minimal and justified
 - No print() in production code
+- No magic numbers: All constants, ports, and settings must be defined in the service's `config.toml` and validated by its `schema.py`.
 
 ---
+
+## Logging Rules
+
+- `setup_logger` must be called only once, in the main entry point of a service (e.g., `main.py`).
+- Do not call `setup_logger` in any other file.
+- Use the configuration system to manage log levels.
 
 ## Comments
 
@@ -135,6 +142,7 @@ This rule is critical for reducing context usage and improving efficiency.
 - Tests must be deterministic (no real network/time dependency unless mocked)
 - Target ≥80% coverage
 - Place tests next to code
+- To check that tests pass you should run: uv run pytest /path/to/test_file.py
 
 ---
 

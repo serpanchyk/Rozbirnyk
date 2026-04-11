@@ -3,5 +3,8 @@ name = "rozbirnyk_backend"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
-
+    "rozbirnyk_common",
 ]
+
+[tool.uv.sources]
+rozbirnyk_common = { workspace = true }
