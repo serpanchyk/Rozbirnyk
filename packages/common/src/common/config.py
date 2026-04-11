@@ -2,9 +2,10 @@
 Configuration loading utilities using Pydantic and TOML.
 """
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic_settings.sources import (
+from pydantic_settings import (
+    BaseSettings,
     PydanticBaseSettingsSource,
+    SettingsConfigDict,
     TomlConfigSettingsSource,
 )
 
@@ -31,6 +32,7 @@ class BaseServiceConfig(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
+        """Configure Pydantic to read from the TOML file."""
         return (
             init_settings,
             env_settings,
