@@ -12,6 +12,7 @@ services:
     ports:
       - "8001:8000"
     env_file:
+      - .env
       - apps/agent_service/.env
     environment:
       - PYTHONUNBUFFERED=1
@@ -37,6 +38,7 @@ services:
     ports:
       - "8000:8000"
     env_file:
+      - .env
       - apps/backend/.env
     environment:
       - PYTHONUNBUFFERED=1
@@ -50,7 +52,6 @@ services:
         tag: backend
     restart: unless-stopped
 
-
   frontend:
     container_name: rozbirnyk-frontend
     build:
@@ -59,6 +60,7 @@ services:
     ports:
       - "8501:8501" # Default Streamlit port, change if using something else
     env_file:
+      - .env
       - apps/frontend/.env
     environment:
       - PYTHONUNBUFFERED=1
@@ -83,6 +85,7 @@ services:
     ports:
       - "8002:8000"
     env_file:
+      - .env
       - mcp_servers/knowledge_service/.env
     environment:
       - PYTHONUNBUFFERED=1
@@ -104,6 +107,7 @@ services:
     ports:
       - "8003:8000"
     env_file:
+      - .env
       - mcp_servers/news_service/.env
     environment:
       - PYTHONUNBUFFERED=1
@@ -125,6 +129,7 @@ services:
     ports:
       - "8004:8000"
     env_file:
+      - .env
       - mcp_servers/opinion_service/.env
     environment:
       - PYTHONUNBUFFERED=1
@@ -146,6 +151,7 @@ services:
     ports:
       - "8005:8000"
     env_file:
+      - .env
       - mcp_servers/probability_service/.env
     environment:
       - PYTHONUNBUFFERED=1
