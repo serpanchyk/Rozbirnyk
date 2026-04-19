@@ -32,7 +32,16 @@ class BaseServiceConfig(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
-        """Configure Pydantic to read from the TOML file."""
+        """
+        Sets configuration priority (First = Highest).
+        1. Explicit arguments (init)
+        2. OS Environment vars
+        3. .env file
+        4. config.toml
+        5. Secrets
+
+        Default values are only used if all the above are empty.
+        """
         return (
             init_settings,
             env_settings,

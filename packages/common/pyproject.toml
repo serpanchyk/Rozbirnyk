@@ -6,7 +6,8 @@ dependencies = [
     "python-json-logger>=4.1.0",
     "pydantic>=2.6.0",
     "pydantic-settings>=2.2.0",
-    "toml",
+    "toml>=0.10.2",
+    "redis>=7.4.0",
 ]
 
 [tool.uv.sources]

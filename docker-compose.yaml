@@ -11,6 +11,9 @@ services:
       dockerfile: apps/agent_service/Dockerfile
     ports:
       - "8001:8000"
+    env_file:
+      - .env
+      - apps/agent_service/.env
     environment:
       - PYTHONUNBUFFERED=1
     depends_on:
@@ -19,6 +22,7 @@ services:
       - opinion-service
       - probability-service
       - fluentd
+      - redis
     logging:
       driver: "fluentd"
       options:
@@ -33,6 +37,9 @@ services:
       dockerfile: apps/backend/Dockerfile
     ports:
       - "8000:8000"
+    env_file:
+      - .env
+      - apps/backend/.env
     environment:
       - PYTHONUNBUFFERED=1
     depends_on:
@@ -45,7 +52,6 @@ services:
         tag: backend
     restart: unless-stopped
 
-
   frontend:
     container_name: rozbirnyk-frontend
     build:
@@ -53,6 +59,9 @@ services:
       dockerfile: apps/frontend/Dockerfile
     ports:
       - "8501:8501" # Default Streamlit port, change if using something else
+    env_file:
+      - .env
+      - apps/frontend/.env
     environment:
       - PYTHONUNBUFFERED=1
     depends_on:
@@ -75,10 +84,14 @@ services:
       dockerfile: mcp_servers/knowledge_service/Dockerfile
     ports:
       - "8002:8000"
+    env_file:
+      - .env
+      - mcp_servers/knowledge_service/.env
     environment:
       - PYTHONUNBUFFERED=1
     depends_on:
       - fluentd
+      - redis
     logging:
       driver: "fluentd"
       options:
@@ -93,10 +106,14 @@ services:
       dockerfile: mcp_servers/news_service/Dockerfile
     ports:
       - "8003:8000"
+    env_file:
+      - .env
+      - mcp_servers/news_service/.env
     environment:
       - PYTHONUNBUFFERED=1
     depends_on:
       - fluentd
+      - redis
     logging:
       driver: "fluentd"
       options:
@@ -111,10 +128,14 @@ services:
       dockerfile: mcp_servers/opinion_service/Dockerfile
     ports:
       - "8004:8000"
+    env_file:
+      - .env
+      - mcp_servers/opinion_service/.env
     environment:
       - PYTHONUNBUFFERED=1
     depends_on:
       - fluentd
+      - redis
     logging:
       driver: "fluentd"
       options:
@@ -129,10 +150,14 @@ services:
       dockerfile: mcp_servers/probability_service/Dockerfile
     ports:
       - "8005:8000"
+    env_file:
+      - .env
+      - mcp_servers/probability_service/.env
     environment:
       - PYTHONUNBUFFERED=1
     depends_on:
       - fluentd
+      - redis
     logging:
       driver: "fluentd"
       options:
@@ -141,9 +166,10 @@ services:
     restart: unless-stopped
 
   # ----------------------------------------
-  # 3. Logging services
+  # 3. 3rd-party services
   # ----------------------------------------
   elasticsearch:
+    container_name: rozbirnyk-elasticsearch
     image: elasticsearch:8.13.0
     environment:
       - discovery.type=single-node
@@ -153,6 +179,7 @@ services:
       - "9200:9200"
 
   fluentd:
+    container_name: rozbirnyk-fluentd
     image: fluent/fluentd:v1.16-debian-1
     volumes:
       - ./infra/logging/fluentd/fluent.conf:/fluentd/etc/fluent.conf
@@ -163,8 +190,16 @@ services:
       - elasticsearch
 
   kibana:
+    container_name: rozbirnyk-kibana
     image: kibana:8.13.0
     ports:
       - "5601:5601"
     depends_on:
       - elasticsearch
+
+  redis:
+    container_name: rozbirnyk-redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped

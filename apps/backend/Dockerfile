@@ -6,7 +6,7 @@ WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1
 
 RUN --mount=type=bind,source=.,target=/app \
-    uv sync --frozen --no-dev --no-editable --package rozbirnyk_backend \
+    uv sync --frozen --no-dev --no-editable --package rozbirnyk_backend
 
 # --- Stage 2: Runtime ---
 FROM python:3.12-slim-bookworm
@@ -15,8 +15,10 @@ WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
 
-COPY apps/backend/src ./apps/backend/src
+COPY apps/backend/src ./src
+COPY apps/backend/config.toml ./config.toml
 
 ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONPATH="/app/src"
 
 CMD ["python", "-m", "backend.main"]
