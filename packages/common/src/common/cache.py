@@ -15,6 +15,7 @@ from typing import Any
 import redis.asyncio as redis
 from pydantic import Field
 from pydantic_settings import BaseSettings
+from redis.exceptions import ConnectionError
 
 from common.logging import setup_logger
 
@@ -55,8 +56,8 @@ async def generate_cache_key(namespace: str, query: str) -> str:
     """Generate a deterministic MD5 hash key for Redis storage.
 
     Args:
-        namespace: The cache namespace (e.g., 'news_api').
-        query: The input string to hash (e.g., a search query).
+        namespace: The cache namespace.
+        query: The input string to hash.
 
     Returns:
         A formatted string to be used as a Redis key.
@@ -81,9 +82,7 @@ async def get_cached_result(key: str) -> Any | None:
     return None
 
 
-async def set_cached_result(
-    key: str, data: dict[str, Any], ttl_seconds: int = 43200
-) -> None:
+async def set_cached_result(key: str, data: dict[str, Any], ttl_seconds: int = 43200) -> None:
     """Serialize and store data in Redis with a Time-To-Live (TTL).
 
     Args:
@@ -100,12 +99,6 @@ def cache_tool(
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Create a decorator to cache the results of an async function.
 
-    The decorator intercepts function calls, checks for a cached result in Redis,
-    and only executes the decorated function on a cache miss. Results are
-    stored in Redis with a specified TTL.
-
-    It generates a deterministic cache key based on the function's arguments.
-
     Args:
         namespace: A string to identify the cache category (e.g., 'weather_api').
         ttl_seconds: The time-to-live for cached results in seconds.
@@ -117,7 +110,6 @@ def cache_tool(
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
-
             arg_str = json.dumps({"args": args, "kwargs": kwargs}, sort_keys=True)
             query_hash = hashlib.md5(arg_str.encode("utf-8")).hexdigest()
             cache_key = f"cache:{namespace}:{query_hash}"
@@ -126,12 +118,14 @@ def cache_tool(
                 cached_data = await get_cached_result(cache_key)
                 if cached_data:
                     logger.info(
-                        "Cache HIT", extra={"cache_hit": True, "namespace": namespace}
+                        "Cache HIT",
+                        extra={"cache_hit": True, "namespace": namespace},
                     )
-                    return cached_data.get("content", "")
+                    return cached_data.get("content")
             except ConnectionError:
                 logger.warning(
-                    "Redis GET failed. Bypassing cache.", extra={"namespace": namespace}
+                    "Redis GET failed. Bypassing cache.",
+                    extra={"namespace": namespace},
                 )
 
             logger.info(
@@ -142,9 +136,7 @@ def cache_tool(
             result = await func(*args, **kwargs)
 
             try:
-                await set_cached_result(
-                    cache_key, {"content": str(result)}, ttl_seconds
-                )
+                await set_cached_result(cache_key, {"content": result}, ttl_seconds)
             except ConnectionError:
                 logger.error(
                     "Redis SET failed. Result not cached.",

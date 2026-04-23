@@ -28,13 +28,14 @@ dev = [
 ]
 
 [tool.ruff]
-line-length = 88
+line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
 
 [tool.mypy]
+plugins = ["pydantic.mypy"]
 strict = true
 python_version = "3.12"
 ignore_missing_imports = true
@@ -51,6 +52,7 @@ files = ["apps", "mcp_servers", "packages"]
 
 [[tool.mypy.overrides]]
 module = [
+    "tests.*",
     "*.tests.*"
 ]
 disallow_untyped_defs = false

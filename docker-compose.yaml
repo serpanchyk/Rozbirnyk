@@ -17,14 +17,20 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     depends_on:
-      - news-service
-      - fluentd
-      - redis
+      news-service:
+        condition: service_healthy
+      fluentd:
+        condition: service_healthy
     logging:
       driver: "fluentd"
       options:
         fluentd-address: localhost:24224
         tag: agent-service
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.settimeout(2); s.connect((\"localhost\", 8000)); s.close()'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   backend:
@@ -40,13 +46,20 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     depends_on:
-      - agent-service
-      - fluentd
+      agent-service:
+        condition: service_healthy
+      fluentd:
+        condition: service_healthy
     logging:
       driver: "fluentd"
       options:
         fluentd-address: localhost:24224
         tag: backend
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.settimeout(2); s.connect((\"localhost\", 8000)); s.close()'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   frontend:
@@ -55,26 +68,32 @@ services:
       context: .
       dockerfile: apps/frontend/Dockerfile
     ports:
-      - "8501:8501" # Default Streamlit port, change if using something else
+      - "8501:8501"
     env_file:
       - .env
       - apps/frontend/.env
     environment:
       - PYTHONUNBUFFERED=1
     depends_on:
-      - backend
-      - fluentd
+      backend:
+        condition: service_healthy
+      fluentd:
+        condition: service_healthy
     logging:
       driver: "fluentd"
       options:
         fluentd-address: localhost:24224
         tag: frontend
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.settimeout(2); s.connect((\"localhost\", 8501)); s.close()'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   # ----------------------------------------
   # 2. The MCP Microservices
   # ----------------------------------------
-
   news-service:
     container_name: rozbirnyk-news
     build:
@@ -88,13 +107,20 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     depends_on:
-      - fluentd
-      - redis
+      redis:
+        condition: service_healthy
+      fluentd:
+        condition: service_healthy
     logging:
       driver: "fluentd"
       options:
         fluentd-address: localhost:24224
         tag: news-service
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.settimeout(2); s.connect((\"localhost\", 8000)); s.close()'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   # ----------------------------------------
@@ -109,6 +135,11 @@ services:
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
     ports:
       - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   fluentd:
     container_name: rozbirnyk-fluentd
@@ -119,7 +150,13 @@ services:
       - "24224:24224"
       - "24224:24224/udp"
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "ruby -e 'require \"socket\"; begin; TCPSocket.new(\"127.0.0.1\", 24224); rescue; exit 1; end'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kibana:
     container_name: rozbirnyk-kibana
@@ -127,7 +164,13 @@ services:
     ports:
       - "5601:5601"
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -f http://localhost:5601/api/status || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
 
   redis:
     container_name: rozbirnyk-redis
@@ -135,3 +178,8 @@ services:
     ports:
       - "6379:6379"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5

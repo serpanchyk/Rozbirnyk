@@ -24,6 +24,13 @@ class LoggingSettings(BaseModel):
     level: str = Field(default="INFO")
 
 
+class TavilySettings(BaseModel):
+    """Tavily configuration"""
+
+    model_config = ConfigDict(extra="forbid")
+    api_key: str = Field(validation_alias="TAVILY_API_KEY")
+
+
 class NewsServiceConfig(BaseServiceConfig):
     """
     Main configuration model for news_service.
@@ -31,6 +38,8 @@ class NewsServiceConfig(BaseServiceConfig):
 
     service: ServiceSettings = Field(default_factory=ServiceSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
+
+    tavily: TavilySettings
 
     model_config = BaseServiceConfig.model_config | {"env_nested_delimiter": "__"}
 

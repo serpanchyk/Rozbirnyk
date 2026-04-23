@@ -13,6 +13,7 @@ from common.cache import (
     get_redis,
     set_cached_result,
 )
+from redis.exceptions import ConnectionError as RedisConnectionError
 
 
 @pytest.fixture(autouse=True)
@@ -83,9 +84,7 @@ async def test_set_cached_result(mock_get_redis):
 
     await set_cached_result("test_key", data, ttl_seconds=10)
 
-    mock_client.set.assert_called_once_with(
-        name="test_key", value=json.dumps(data), ex=10
-    )
+    mock_client.set.assert_called_once_with(name="test_key", value=json.dumps(data), ex=10)
 
 
 @pytest.mark.asyncio
@@ -104,7 +103,7 @@ async def test_cache_tool_miss(mock_get, mock_set):
     assert result == 10
     mock_get.assert_called_once()
     mock_set.assert_called_once()
-    assert mock_set.call_args[0][1] == {"content": "10"}
+    assert mock_set.call_args[0][1] == {"content": 10}
     assert mock_set.call_args[0][2] == 100
 
 
@@ -131,7 +130,7 @@ async def test_cache_tool_hit(mock_get, mock_set):
 @patch("common.cache.get_cached_result")
 async def test_cache_tool_redis_get_error(mock_get, mock_set):
     """Test the cache_tool decorator when Redis 'get' raises an error."""
-    mock_get.side_effect = ConnectionError
+    mock_get.side_effect = RedisConnectionError
 
     @cache_tool(namespace="test_space")
     async def dummy_func(x):
@@ -150,7 +149,7 @@ async def test_cache_tool_redis_get_error(mock_get, mock_set):
 async def test_cache_tool_redis_set_error(mock_get, mock_set):
     """Test the cache_tool decorator when Redis 'set' raises an error."""
     mock_get.return_value = None
-    mock_set.side_effect = ConnectionError
+    mock_get.side_effect = RedisConnectionError
 
     @cache_tool(namespace="test_space")
     async def dummy_func(x):
