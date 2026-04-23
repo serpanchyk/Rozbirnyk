@@ -35,6 +35,7 @@ target-version = "py312"
 select = ["E", "F", "I", "UP"]
 
 [tool.mypy]
+plugins = ["pydantic.mypy"]
 strict = true
 python_version = "3.12"
 ignore_missing_imports = true
@@ -51,6 +52,7 @@ files = ["apps", "mcp_servers", "packages"]
 
 [[tool.mypy.overrides]]
 module = [
+    "tests.*",
     "*.tests.*"
 ]
 disallow_untyped_defs = false

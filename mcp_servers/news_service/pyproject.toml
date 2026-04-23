@@ -3,7 +3,9 @@ name = "rozbirnyk_news_service"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "fastmcp>=3.2.4",
     "rozbirnyk_common",
+    "tavily-python>=0.7.23",
 ]
 
 [tool.uv.sources]
