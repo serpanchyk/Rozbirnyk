@@ -18,15 +18,11 @@ from typing import Any
 
 from pythonjsonlogger import json as jsonlogger
 
-trace_id_var: contextvars.ContextVar[str | None] = contextvars.ContextVar(
-    "trace_id", default=None
-)
+trace_id_var: contextvars.ContextVar[str | None] = contextvars.ContextVar("trace_id", default=None)
 session_id_var: contextvars.ContextVar[str | None] = contextvars.ContextVar(
     "session_id", default=None
 )
-user_id_var: contextvars.ContextVar[str | None] = contextvars.ContextVar(
-    "user_id", default=None
-)
+user_id_var: contextvars.ContextVar[str | None] = contextvars.ContextVar("user_id", default=None)
 
 
 class ContextualJsonFormatter(jsonlogger.JsonFormatter):
@@ -58,9 +54,7 @@ class ContextualJsonFormatter(jsonlogger.JsonFormatter):
         super().add_fields(log_record, record, message_dict)
 
         if not log_record.get("timestamp"):
-            log_record["timestamp"] = datetime.now(UTC).strftime(
-                "%Y-%m-%dT%H:%M:%S.%fZ"
-            )
+            log_record["timestamp"] = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         if not log_record.get("name"):
             log_record["name"] = record.name
 

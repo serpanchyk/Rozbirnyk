@@ -1,6 +1,5 @@
-"""Public interface for the MCP communication package."""
+"""Public interface for the MCP integration layer."""
 
-from agent_service.mcp.adapter import MCPToolAdapter
-from agent_service.mcp.client import RemoteMCPClient
+from agent_service.mcp.manager import MCPResourceManager
 
-__all__ = ["RemoteMCPClient", "MCPToolAdapter"]
+__all__ = ["MCPResourceManager"]

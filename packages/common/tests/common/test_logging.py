@@ -39,9 +39,7 @@ class TestLogging(unittest.TestCase):
         Verify that ContextualJsonFormatter adds basic fields correctly.
         """
         formatter = ContextualJsonFormatter()
-        record = logging.LogRecord(
-            "test", logging.INFO, "/path", 1, "message", (), None
-        )
+        record = logging.LogRecord("test", logging.INFO, "/path", 1, "message", (), None)
         log_record: dict[str, str | None] = {}
         formatter.add_fields(log_record, record, {})
         self.assertIn("timestamp", log_record)
@@ -59,9 +57,7 @@ class TestLogging(unittest.TestCase):
         user_id_var.set("test_user_id")
 
         formatter = ContextualJsonFormatter()
-        record = logging.LogRecord(
-            "test", logging.INFO, "/path", 1, "message", (), None
-        )
+        record = logging.LogRecord("test", logging.INFO, "/path", 1, "message", (), None)
         log_record: dict[str, str | None] = {}
         formatter.add_fields(log_record, record, {})
 
@@ -112,9 +108,7 @@ class TestLogging(unittest.TestCase):
         handler = logging.StreamHandler()
         handler.setFormatter(ContextualJsonFormatter())
         assert handler.formatter is not None
-        log_record = logging.LogRecord(
-            "test", logging.INFO, "test", 1, "test", None, None
-        )
+        log_record = logging.LogRecord("test", logging.INFO, "test", 1, "test", None, None)
         result = handler.formatter.format(log_record)
         assert '"message": "test"' in result
 

@@ -75,9 +75,7 @@ async def test_search_deep_research(mock_config, mock_tavily, mock_cache):
         mock_tavily: The mocked Tavily API client fixture.
         mock_cache: The mocked Redis cache fixture.
     """
-    expected_response = {
-        "results": [{"title": "Historical Context", "url": "http://test"}]
-    }
+    expected_response = {"results": [{"title": "Historical Context", "url": "http://test"}]}
     mock_tavily.search.return_value = expected_response
 
     result = await search_deep_research("Global warming policies")

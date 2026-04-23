@@ -82,9 +82,7 @@ async def get_cached_result(key: str) -> Any | None:
     return None
 
 
-async def set_cached_result(
-    key: str, data: dict[str, Any], ttl_seconds: int = 43200
-) -> None:
+async def set_cached_result(key: str, data: dict[str, Any], ttl_seconds: int = 43200) -> None:
     """Serialize and store data in Redis with a Time-To-Live (TTL).
 
     Args:

@@ -84,9 +84,7 @@ async def test_set_cached_result(mock_get_redis):
 
     await set_cached_result("test_key", data, ttl_seconds=10)
 
-    mock_client.set.assert_called_once_with(
-        name="test_key", value=json.dumps(data), ex=10
-    )
+    mock_client.set.assert_called_once_with(name="test_key", value=json.dumps(data), ex=10)
 
 
 @pytest.mark.asyncio
