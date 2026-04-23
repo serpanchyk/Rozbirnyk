@@ -44,10 +44,7 @@ mypy_path = [
     "apps/agent_service/src",
     "apps/frontend/src",
     "apps/backend/src",
-    "mcp_servers/knowledge_service/src",
     "mcp_servers/news_service/src",
-    "mcp_servers/opinion_service/src",
-    "mcp_servers/probability_service/src",
     "packages/common/src"
 ]
 files = ["apps", "mcp_servers", "packages"]
@@ -77,10 +74,7 @@ pythonpath = [
     "apps/agent_service/src",
     "apps/frontend/src",
     "apps/backend/src",
-    "mcp_servers/knowledge_service/src",
     "mcp_servers/news_service/src",
-    "mcp_servers/opinion_service/src",
-    "mcp_servers/probability_service/src",
     "packages/common/src"
 ]
 

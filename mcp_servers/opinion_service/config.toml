@@ -1,7 +1,0 @@
-[service]
-name = "opinion_service"
-version = "0.1.0"
-port = 8004
-
-[logging]
-level = "INFO"

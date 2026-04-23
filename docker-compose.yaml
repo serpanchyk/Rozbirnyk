@@ -17,10 +17,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     depends_on:
-      - knowledge-service
       - news-service
-      - opinion-service
-      - probability-service
       - fluentd
       - redis
     logging:
@@ -77,27 +74,6 @@ services:
   # ----------------------------------------
   # 2. The MCP Microservices
   # ----------------------------------------
-  knowledge-service:
-    container_name: rozbirnyk-knowledge
-    build:
-      context: .
-      dockerfile: mcp_servers/knowledge_service/Dockerfile
-    ports:
-      - "8002:8000"
-    env_file:
-      - .env
-      - mcp_servers/knowledge_service/.env
-    environment:
-      - PYTHONUNBUFFERED=1
-    depends_on:
-      - fluentd
-      - redis
-    logging:
-      driver: "fluentd"
-      options:
-        fluentd-address: localhost:24224
-        tag: knowledge-service
-    restart: unless-stopped
 
   news-service:
     container_name: rozbirnyk-news
@@ -105,7 +81,7 @@ services:
       context: .
       dockerfile: mcp_servers/news_service/Dockerfile
     ports:
-      - "8003:8000"
+      - "8002:8000"
     env_file:
       - .env
       - mcp_servers/news_service/.env
@@ -119,50 +95,6 @@ services:
       options:
         fluentd-address: localhost:24224
         tag: news-service
-    restart: unless-stopped
-
-  opinion-service:
-    container_name: rozbirnyk-opinion
-    build:
-      context: .
-      dockerfile: mcp_servers/opinion_service/Dockerfile
-    ports:
-      - "8004:8000"
-    env_file:
-      - .env
-      - mcp_servers/opinion_service/.env
-    environment:
-      - PYTHONUNBUFFERED=1
-    depends_on:
-      - fluentd
-      - redis
-    logging:
-      driver: "fluentd"
-      options:
-        fluentd-address: localhost:24224
-        tag: opinion-service
-    restart: unless-stopped
-
-  probability-service:
-    container_name: rozbirnyk-probability
-    build:
-      context: .
-      dockerfile: mcp_servers/probability_service/Dockerfile
-    ports:
-      - "8005:8000"
-    env_file:
-      - .env
-      - mcp_servers/probability_service/.env
-    environment:
-      - PYTHONUNBUFFERED=1
-    depends_on:
-      - fluentd
-      - redis
-    logging:
-      driver: "fluentd"
-      options:
-        fluentd-address: localhost:24224
-        tag: probability-service
     restart: unless-stopped
 
   # ----------------------------------------
