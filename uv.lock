@@ -8,10 +8,7 @@ members = [
     "rozbirnyk-backend",
     "rozbirnyk-common",
     "rozbirnyk-frontend",
-    "rozbirnyk-knowledge-service",
     "rozbirnyk-news-service",
-    "rozbirnyk-opinion-service",
-    "rozbirnyk-probability-service",
 ]
 
 [manifest.dependency-groups]
@@ -678,42 +675,9 @@ dependencies = [
 requires-dist = [{ name = "rozbirnyk-common", editable = "packages/common" }]
 
 [[package]]
-name = "rozbirnyk-knowledge-service"
-version = "0.1.0"
-source = { virtual = "mcp_servers/knowledge_service" }
-dependencies = [
-    { name = "rozbirnyk-common" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "rozbirnyk-common", editable = "packages/common" }]
-
-[[package]]
 name = "rozbirnyk-news-service"
 version = "0.1.0"
 source = { virtual = "mcp_servers/news_service" }
-dependencies = [
-    { name = "rozbirnyk-common" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "rozbirnyk-common", editable = "packages/common" }]
-
-[[package]]
-name = "rozbirnyk-opinion-service"
-version = "0.1.0"
-source = { virtual = "mcp_servers/opinion_service" }
-dependencies = [
-    { name = "rozbirnyk-common" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "rozbirnyk-common", editable = "packages/common" }]
-
-[[package]]
-name = "rozbirnyk-probability-service"
-version = "0.1.0"
-source = { virtual = "mcp_servers/probability_service" }
 dependencies = [
     { name = "rozbirnyk-common" },
 ]
