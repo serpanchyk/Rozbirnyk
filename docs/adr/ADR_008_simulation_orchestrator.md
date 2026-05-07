@@ -20,13 +20,16 @@ Actors do not *do* things; they *propose* things. The Orchestrator evaluates eve
 *   **Logical Plausibility:** Is the action physically and economically possible given the current `States/` files? (e.g., A bankrupt organization cannot fund a massive global campaign).
 *   **Causality Check:** Does the action directly follow from the current `Timeline.md`?
 
-If an action fails validation, the Orchestrator rejects it and forces the Actor to propose an alternative, logging the failed attempt in the Actor's private memory.
+If an action fails validation, the Orchestrator rejects it and forces the Actor to propose an alternative. The rejected proposal remains in the turn log, while actor-private memory additions are performed only by Actors through their `append_to_actor_memory` tool.
 
 ### 3. Exclusive Mutation Rights
-The Orchestrator is the **only** entity with access to "Write" MCP tools during the simulation. Upon validating an action, the Orchestrator:
+The Orchestrator is the only entity with authority to mutate shared simulation state during the simulation. It receives `read_state_file`, `edit_state_file`, `read_timeline`, `append_to_timeline`, `read_actor_file`, `edit_actor_file`, and `delete_file`. It does not receive `append_to_actor_memory`, which is reserved for Actors' own private memory entries.
+
+Upon validating an action, the Orchestrator:
 1. Translates the action into environmental changes (`edit_state_file`).
-2. Updates the acting and affected Actors' internal states (`edit_actor_file`, `append_to_memory`).
+2. Updates the acting and affected Actors' durable character sheets when goals, policies, or current state must change (`edit_actor_file`).
 3. Writes the official, immutable record of the event to `Timeline.md`.
+4. Deletes obsolete Wiki files when the world model no longer needs them (`delete_file`), except `Timeline.md`, which cannot be deleted through MCP.
 
 ### 4. Termination Conditions
 To prevent infinite loops, the Orchestrator evaluates stopping conditions at the end of every turn. The simulation ends when:

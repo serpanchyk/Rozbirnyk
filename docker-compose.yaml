@@ -19,6 +19,8 @@ services:
     depends_on:
       news-service:
         condition: service_healthy
+      wiki-service:
+        condition: service_healthy
       fluentd:
         condition: service_healthy
     logging:
@@ -123,6 +125,34 @@ services:
       retries: 5
     restart: unless-stopped
 
+  wiki-service:
+    container_name: rozbirnyk-wiki
+    build:
+      context: .
+      dockerfile: mcp_servers/wiki_service/Dockerfile
+    ports:
+      - "8003:8000"
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - wiki-data:/data/wiki
+    depends_on:
+      fluentd:
+        condition: service_healthy
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: wiki-service
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.settimeout(2); s.connect((\"localhost\", 8000)); s.close()'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   # ----------------------------------------
   # 3. 3rd-party services
   # ----------------------------------------
@@ -177,9 +207,12 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
+
+volumes:
+  wiki-data:

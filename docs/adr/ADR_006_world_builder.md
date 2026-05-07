@@ -19,7 +19,9 @@ The World Builder is responsible for the "Genesis" phase of the simulation:
 *   **Formatting Compliance:** It ensures all generated files strictly adhere to the Title + Short Description indexing rule established in ADR 005.
 
 ### 2. Strict Handoff (The Boundary)
-The World Builder operates with broad "Write" access to the entire Wiki. However, once the Wiki is fully populated, the World Builder **terminates**. It does not participate in the simulation loop, does not read the `Timeline.md` as it evolves, and cannot alter the world state once the Actors begin their turns.
+The World Builder operates only with the Wiki MCP tools needed to initialize state and actor files: `read_state_file`, `edit_state_file`, `read_timeline`, `read_actor_file`, and `edit_actor_file`. It cannot append official events to `Timeline.md`, cannot append actor memory entries as a simulation participant, and cannot delete files.
+
+Once the Wiki is fully populated, the World Builder **terminates**. It does not participate in the simulation loop, does not read the `Timeline.md` as it evolves, and cannot alter the world state once the Actors begin their turns.
 
 ## Consequences
 
@@ -34,4 +36,4 @@ The World Builder operates with broad "Write" access to the entire Wiki. However
 
 ### Mitigation
 *   The Builder's system prompt will include strict constraints to limit the maximum number of generated actors and state files to prevent context bloat and excessive startup times.
-*   We will leverage the Hybrid REST/MCP Architecture (ADR 006) to stream the Builder's progress to the frontend, providing UX feedback to the user while the world is being constructed.
+*   We will leverage the Hybrid API/MCP Architecture (ADR 006) to stream the Builder's progress to the frontend, providing UX feedback to the user while the world is being constructed.

@@ -13,9 +13,11 @@ We will implement the **Report Agent** as an isolated, strictly read-only analyt
 
 ### 1. Read-Only Constraint
 The Report Agent operates with zero mutation privileges. It is denied access to all MCP tools that alter the Wiki (e.g., `edit_state_file`, `append_to_timeline`). It only utilizes:
-*   `read_timeline`
 *   `read_state_file`
-*   `read_actor_file` (to understand final Actor goals/memories)
+*   `read_timeline`
+*   `read_actor_file`
+
+Before it begins reading full files, the Report Agent is injected through the Wiki API with the title and short description of every Wiki file. This lets it select relevant state and actor files without mutating or rediscovering the Wiki structure through MCP.
 
 ### 2. Structured Analytical Pipeline
 The Agent does not simply summarize the text. It uses a structured prompt to evaluate the simulation data and produce a final `Forecast_Report.md` containing:

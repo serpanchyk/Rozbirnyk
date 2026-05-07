@@ -1,0 +1,10 @@
+[service]
+name = "wiki_service"
+version = "0.1.0"
+port = 8000
+
+[logging]
+level = "INFO"
+
+[storage]
+root_dir = "/data/wiki"

@@ -23,15 +23,15 @@ Every `Actors/{actor_name}.md` file will strictly adhere to the following struct
 
 ### 2. The Actor Lifecycle
 *   **Genesis (World Builder):** The World Builder synthesizes news via Tavily to populate the initial Identity, Goals, and Policies.
-*   **Execution (Actor Loop):** On its turn, the Actor's entire `.md` file is injected as its System Prompt, alongside the public Wiki summaries.
-*   **Mutation (Orchestrator):** Actors cannot edit their own files directly. They must *propose* memory additions or goal updates (e.g., "Mark Goal 1 as complete"). The Orchestrator validates this and executes the file write via the `wiki_service` MCP.
+*   **Execution (Actor Loop):** On its turn, the Actor receives its own actor files from the Wiki API, alongside the title and short description of every Wiki file. It may use MCP tools to read complete state files, read the timeline, and append entries to its own private memory.
+*   **Mutation Boundary:** Actors cannot edit state files, actor files, the timeline, or delete Wiki files. They may only append private memory entries through `append_to_actor_memory`; changes to goals, policies, public world state, and timeline events remain under the Orchestrator's validation and mutation flow.
 
 ## Consequences
 
 ### Positive
 *   **Behavioral Consistency:** The strict "Policies" and "Characteristics" sections force the LLM to stay in character, improving the realism of the forecast.
 *   **Explainable AI:** If an Actor makes a bizarre move, developers can look at the `Actors/*.md` file to see if a corrupted Goal or Memory caused it.
-*   **Clean Orchestration:** By separating private internal state (Actor file) from public state (`Timeline.md`), we can simulate deception, secret alliances, and asymmetric information.
+*   **Clean Orchestration:** By separating private internal memory from public state (`Timeline.md`), we can simulate deception, secret alliances, and asymmetric information without giving Actors authority to mutate shared world facts.
 
 ### Negative
 *   **Context Bloat:** As the simulation runs, the "Private Memory" section of the Markdown file will continuously grow, eventually consuming too much of the context window and increasing API costs.
