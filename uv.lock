@@ -9,6 +9,7 @@ members = [
     "rozbirnyk-common",
     "rozbirnyk-frontend",
     "rozbirnyk-news-service",
+    "rozbirnyk-wiki-service",
 ]
 
 [manifest.dependency-groups]
@@ -1727,6 +1728,25 @@ requires-dist = [
     { name = "fastmcp", specifier = ">=3.2.4" },
     { name = "rozbirnyk-common", editable = "packages/common" },
     { name = "tavily-python", specifier = ">=0.7.23" },
+]
+
+[[package]]
+name = "rozbirnyk-wiki-service"
+version = "0.1.0"
+source = { virtual = "mcp_servers/wiki_service" }
+dependencies = [
+    { name = "fastapi" },
+    { name = "fastmcp" },
+    { name = "rozbirnyk-common" },
+    { name = "uvicorn" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.135.3" },
+    { name = "fastmcp", specifier = ">=3.2.4" },
+    { name = "rozbirnyk-common", editable = "packages/common" },
+    { name = "uvicorn", specifier = ">=0.38.0" },
 ]
 
 [[package]]

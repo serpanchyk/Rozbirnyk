@@ -2,29 +2,26 @@
 
 ## Project Overview
 
-Rozbirnyk is a multi-agent system that produces political forecasts.
+Rozbirnyk is an autonomous world-modeling engine that transforms "What if" queries into dynamic, multi-agent simulations grounded in real-world data.
 
 Inputs:
-- news data
-- social opinion data
-- prediction markets (Polymarket)
-- structured knowledge (documents/books)
+- User "What if" scenarios
+- Real-time news and contextual data (Tavily)
 
 Output:
-- probability-based political forecasts
+- Chronological simulation timeline (`Timeline.md`)
+- Evolving Markdown-based World Wiki (States and Actors)
+- Final narrative report of the simulated future
 
 Architecture:
 - apps:
-  - agent_service — orchestration (FastAPI)
-  - backend — core API logic
-  - frontend — Streamlit UI
+  - simulation_engine — ReAct loops for Builder, Orchestrator, Actors, Report (LangGraph)
+  - frontend — Streamlit UI or CLI
 - mcp_servers:
-  - knowledge_service
-  - news_service
-  - opinion_service
-  - probability_service
+  - news_service — Tavily ingestion and caching
+  - wiki_service — File system I/O for State, Timeline, and Actor files
 - packages:
-  - common — shared utilities (logging, helpers)
+  - common — shared utilities (logging, caching, helpers)
 - infra:
   - logging/fluentd — log pipeline
 
@@ -47,7 +44,8 @@ All code must be:
 
 - Python 3.12+
 - uv (workspace-based dependency management)
-- FastAPI (backend services)
+- LangGraph (Agent orchestration and state transitions)
+- FastAPI (backend services/MCP transport)
 - Streamlit (frontend)
 - Docker (multi-stage builds using uv base image)
 - Logging: JSON structured logs (trace_id, session_id, user_id)
@@ -71,9 +69,9 @@ All code must be:
 - Install/sync: `uv sync`
 - Full install: `uv sync --all-extras`
 - Run stack: `docker compose up --build`
-- Run service: `docker compose up agent-service`
+- Run service: `docker compose up <service_name>`
 - Lint/format/typecheck:
-  `uv run pre-commit run --all-file`
+  `uv run pre-commit run --all-files`
 - Tests: `uv run pytest`
 - Lock deps: `uv lock`
 
@@ -90,8 +88,6 @@ When reading or working with command outputs (CLI, logs, CI results, test output
 - Only read full output if the tail is insufficient to determine the issue or result.
 - Prefer incremental narrowing instead of full re-reading of long outputs.
 - Avoid reprocessing already-seen output unless new information is required.
-
-This rule is critical for reducing context usage and improving efficiency.
 
 ---
 
@@ -114,86 +110,94 @@ This rule is critical for reducing context usage and improving efficiency.
 - Do not call `setup_logger` in any other file.
 - Use the configuration system to manage log levels.
 
-## Comments
+---
 
-- Every file must start with a docstring describing purpose.
-- Use docstrings for all documentation:
-  - module: purpose
-  - class: responsibility
-  - function/method: behavior, inputs, outputs, edge cases
-  - tests: what is being validated
+## Documentation Structure & Rules
 
-- Code must be self-explanatory via naming and structure.
+**Strict Update Rule:** If you make code changes that alter system behavior, architecture, or configuration, you **MUST** update the corresponding documentation files in the `docs/` directory to reflect these changes.
 
+**Documentation Architecture (`docs/`):**
+- `VISION.md`: The North Star. Defines high-level goals, core principles, non-goals, and the core simulation loop.
+- `ARCHITECTURE.md`: Defines system components (agents, state layer), data flow, tool integration (MCP), and the tech stack.
+- `adr/`: Architecture Decision Records. Contains individual `.md` files (e.g., `ADR_001.md`) documenting the context, decisions, and consequences of major engineering choices.
+
+**Code Comments:**
+- Every module, class, and public function must have a docstring. Private ones need it if logic is non-trivial.
+- Use **Google-style docstrings** that explain intent and behavior, not implementation.
+- Place documentation at the top of the file and inside every class, function, and method. 
+- The first line must be a short imperative summary.
+- Type hints must not be repeated in the docstring. Include `Args`, `Returns`, and `Raises` when relevant.
+- Include examples for non-trivial logic.
+- Avoid vague or outdated docs and remove docs that don’t improve understanding.
+- For the system, explicitly document data flow, role in the simulation/forecasting, logging context (if relevant), and note async behavior when needed.
 - Inline comments (`#`) are forbidden except:
   - TODOs
   - external constraints (API / legacy / system behavior)
-  - rare cases where refactoring reduces clarity more than a short note
-
-- If inline comments feel necessary, refactor first.
+  - rare cases where refactoring reduces clarity more than a short note.
+  - If inline comments feel necessary, refactor first.
 
 ---
 
 ## Testing Rules
 
-- All features and bug fixes must include tests
-- No testless features allowed
-- Use pytest + asyncio mode
-- Tests must be deterministic (no real network/time dependency unless mocked)
-- Target ≥80% coverage
-- Place tests next to code
-- To check that tests pass you should run: uv run pytest /path/to/test_file.py
+- All features and bug fixes must include tests.
+- No testless features allowed.
+- Use pytest + asyncio mode.
+- Tests must be deterministic (no real network/time dependency unless mocked).
+- Target ≥80% coverage.
+- Place tests next to code.
+- To check that tests pass you should run: `uv run pytest /path/to/test_file.py`
 
 ---
 
 ## Docker Rules
 
-- Use existing multi-stage uv Docker pattern
-- Build command must include:
-  `uv sync --frozen --no-dev --no-editable`
-- One service per container
-- Do not modify base images without strong justification
-- Never use privileged containers
-- Never mount host root directories
+- Use existing multi-stage uv Docker pattern.
+- Build command must include: `uv sync --frozen --no-dev --no-editable`
+- One service per container.
+- Do not modify base images without strong justification.
+- Never use privileged containers.
+- Never mount host root directories.
 
 ---
 
 ## Git Rules
 
-- Conventional commits only (feat, fix, refactor, chore)
-- Always run tests + lint before commit
-- Never push directly to main
-- PR must describe what changed and why
+- Conventional commits only (feat, fix, refactor, chore).
+- Always run tests + lint before commit.
+- Never push directly to main.
+- PR must describe what changed and why.
 
 ---
 
 ## What NOT to do
 
-- Do not add unnecessary dependencies
-- Do not bypass linting or type checking
-- Do not weaken logging or context propagation
-- Do not use print() for debugging
-- Do not commit secrets or environment files
-- Do not modify docker-compose or infra without reason
-- Do not touch cache/build artifacts
+- Do not add unnecessary dependencies.
+- Do not bypass linting or type checking.
+- Do not weaken logging or context propagation.
+- Do not use print() for debugging.
+- Do not commit secrets or environment files.
+- Do not modify docker-compose or infra without reason.
+- Do not touch cache/build artifacts.
 
 ---
 
 ## Agent Behavior Rules
 
-- Understand service responsibility before changing it
-- Keep changes minimal and local unless explicitly required
+- Understand service responsibility before changing it.
+- Keep changes minimal and local unless explicitly required.
 - For cross-service changes, consider full pipeline impact:
-  news → opinion → knowledge → probability → agent_service
-- Prefer incremental improvements over large refactors
-- Keep system observable at all times
+  news_service -> World Builder -> Wiki -> Orchestrator -> Actors -> Wiki -> Report Agent
+- Prefer incremental improvements over large refactors.
+- Keep system observable at all times.
+- If you change something in the code, do not justify it by saying "it's a good practice." You must explain exactly why the change is important and how it improves the system.
 
 ---
 
 ## Decision Principle
 
 When uncertain:
-1. Prefer simplicity over abstraction
-2. Prefer explicit code over clever code
-3. Prefer local changes over global refactors
-4. Prefer consistency over optimization
+1. Prefer simplicity over abstraction.
+2. Prefer explicit code over clever code.
+3. Prefer local changes over global refactors.
+4. Prefer consistency over optimization.
