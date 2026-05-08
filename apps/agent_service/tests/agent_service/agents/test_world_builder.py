@@ -1,13 +1,16 @@
 """Unit tests for the World Builder LangGraph workflow."""
 
+from collections.abc import Sequence
 from typing import Any
 
 import pytest
-from agent_service.tools.registry import ToolRegistry
-from agent_service.world_builder.graph import (
+from agent_service.agents.base import AgentBase
+from agent_service.agents.world_builder import (
+    WorldBuilder,
     build_world_builder_initial_state,
     create_world_builder_graph,
 )
+from agent_service.tools.registry import ToolRegistry
 from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.tools import BaseTool, tool
 
@@ -20,9 +23,9 @@ class FakeBoundModel:
         self.responses = responses
         self.calls: list[list[BaseMessage]] = []
 
-    async def ainvoke(self, messages: list[BaseMessage]) -> AIMessage:
+    async def ainvoke(self, messages: Sequence[BaseMessage]) -> AIMessage:
         """Return the next prepared response."""
-        self.calls.append(messages)
+        self.calls.append(list(messages))
         return self.responses.pop(0)
 
 
@@ -34,7 +37,7 @@ class FakeModel:
         self.bound_model = FakeBoundModel(responses)
         self.bound_tools: list[BaseTool] = []
 
-    def bind_tools(self, tools: list[BaseTool]) -> FakeBoundModel:
+    def bind_tools(self, tools: Sequence[BaseTool]) -> FakeBoundModel:
         """Record tools and return the bound fake model."""
         self.bound_tools = list(tools)
         return self.bound_model
@@ -141,6 +144,29 @@ async def test_world_builder_graph_executes_tool_loop_and_terminates() -> None:
     assert len(model.bound_model.calls) == 2
     assert result["messages"][-1].content == "Created States/eu.md and Actors/parliament.md"
     assert result["remaining_steps"] == 6
+
+
+def test_world_builder_is_agent_base_subclass() -> None:
+    """Verify the World Builder follows the shared agent class contract."""
+    assert issubclass(WorldBuilder, AgentBase)
+
+
+def test_world_builder_builds_initial_state_with_instance_defaults() -> None:
+    """Verify the class owns World Builder initial state construction."""
+    builder = WorldBuilder(FakeModel([AIMessage(content="done")]), _make_registry())
+
+    state = builder.build_initial_state(
+        scenario="Brazil joins OPEC",
+        session_id="scenario-2",
+    )
+
+    assert state == {
+        "messages": state["messages"],
+        "scenario": "Brazil joins OPEC",
+        "session_id": "scenario-2",
+        "remaining_steps": 8,
+    }
+    assert state["messages"][0].content == "What if Brazil joins OPEC"
 
 
 def test_world_builder_graph_rejects_models_without_tool_binding() -> None:

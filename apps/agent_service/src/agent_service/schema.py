@@ -1,6 +1,4 @@
-"""
-Pydantic schema for agent_service configuration.
-"""
+"""Define Pydantic schemas for agent_service configuration."""
 
 from functools import lru_cache
 from typing import Literal
@@ -25,10 +23,14 @@ class LoggingSettings(BaseModel):
     level: str = Field(default="INFO")
 
 
+type ModelProvider = Literal["bedrock"]
+
+
 class ModelSettings(BaseModel):
-    """Configure the Bedrock chat model used by agent graphs."""
+    """Configure the chat model used by agent graphs."""
 
     model_config = ConfigDict(extra="forbid")
+    provider: ModelProvider = Field(default="bedrock")
     model_id: str = Field(default="anthropic.claude-sonnet-4-20250514-v1:0")
     region_name: str = Field(min_length=1)
     temperature: float = Field(default=0.2, ge=0.0, le=1.0)
@@ -66,9 +68,7 @@ class MCPServersSettings(BaseModel):
 
 
 class AgentServiceConfig(BaseServiceConfig):
-    """
-    Main configuration model for agent_service.
-    """
+    """Validate agent_service runtime configuration."""
 
     service: ServiceSettings = Field(default_factory=ServiceSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
@@ -80,8 +80,5 @@ class AgentServiceConfig(BaseServiceConfig):
 
 @lru_cache
 def get_config() -> AgentServiceConfig:
-    """
-    Loads the configuration once and caches it.
-    Subsequent calls return the cached memory instance.
-    """
+    """Load and cache the service configuration."""
     return AgentServiceConfig()

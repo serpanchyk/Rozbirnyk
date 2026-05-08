@@ -1,7 +1,7 @@
 # ADR 007: Phased Initialization via the World Builder Agent
 
 ## Status
-Accepted
+Accepted, amended 2026-05-08
 
 ## Context
 Rozbirnyk requires a mechanism to translate a brief user prompt (e.g., "What if the European Union bans AI open-source models?") into a fully populated, multi-agent simulation environment. 
@@ -9,7 +9,17 @@ Rozbirnyk requires a mechanism to translate a brief user prompt (e.g., "What if 
 If we allow the Simulation Orchestrator or individual Actors to fetch their own real-world context dynamically during the simulation, it will result in conflicting realities and "hallucination cascades." Furthermore, Actors should not have the cognitive burden of designing the world they live in; their token capacity must be reserved for playing their role. We need a dedicated, logically isolated initialization phase to establish the "Ground Truth" before the simulation begins.
 
 ## Decision
-We will implement the **World Builder Agent** as a distinct, single-purpose ReAct loop (via LangGraph `StateGraph` and `ToolNode`) that executes exclusively before the Simulation Orchestrator takes control.
+We will implement the **World Builder Agent** as a distinct, single-purpose ReAct loop (via LangGraph `StateGraph` and `ToolNode`) that executes exclusively before the Simulation Orchestrator takes control. The implementation is owned by one `WorldBuilder` class. Graph construction, initial state creation, model invocation, prompt assembly, and routing all live on that class so the agent's lifecycle is easy to inspect in one place.
+
+`WorldBuilder` inherits from the shared `AgentBase`, which centralizes role identity, role-scoped tool resolution, model tool binding, and the maximum-step setting. Future concrete agents, including the Simulation Orchestrator, Actors, and Report Agent, should inherit from `AgentBase` rather than recreating model/tool wiring.
+
+Agent-service code is organized around shared runtime concerns:
+*   Concrete agent classes and their LangGraph definitions live in `agent_service/agents/`.
+*   Agent prompts live in `agent_service/prompts/`.
+*   LangGraph state schemas live in `agent_service/schemas/`.
+*   Agent service configuration remains in `agent_service/schema.py`.
+*   External runtime services, including provider-independent LLM model management, live in `agent_service/services/`.
+*   Tool resolution is split across `agent_service/tools/roles.py`, `bindings.py`, `discovery.py`, `wrappers.py`, and a thin `registry.py` coordinator so role policy, MCP discovery, and model-facing tool adaptation stay independently testable.
 
 ### 1. Responsibilities & Execution Flow
 The World Builder is responsible for the "Genesis" phase of the simulation:
@@ -24,7 +34,7 @@ The World Builder receives its tools through the `agent_service` Tool Registry. 
 The registry exposes stable model-facing names such as `news_search_recent_news` and `wiki_edit_state_file`. For Wiki tools, `session_id` is injected from LangGraph state and is not exposed as a model-controlled argument.
 
 ### 3. Model Runtime
-The production model path uses AWS Bedrock via `ChatBedrockConverse`. `agent_service/config.toml` stores non-sensitive defaults for `model_id`, required `region_name`, `temperature`, and `max_tokens`; credentials remain in the standard AWS environment, profile, or IAM role chain.
+The production model path is created through `LLMService`, which hides provider-specific model construction from agents. The initial provider is AWS Bedrock via `ChatBedrockConverse`. `agent_service/config.toml` stores non-sensitive defaults for `provider`, `model_id`, required `region_name`, `temperature`, and `max_tokens`; credentials remain in the standard AWS environment, profile, or IAM role chain. Agents receive the active bindable model object and do not know which provider or model-switching path produced it.
 
 Tests pass fake models and fake tools directly into the graph factory so no AWS or live MCP service calls are made during unit tests.
 
