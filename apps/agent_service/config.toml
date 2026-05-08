@@ -5,3 +5,21 @@ port = 8001
 
 [logging]
 level = "INFO"
+
+[model]
+model_id = "anthropic.claude-sonnet-4-20250514-v1:0"
+region_name = "us-east-1"
+temperature = 0.2
+max_tokens = 4096
+
+[mcp_servers.wiki_service]
+host = "wiki_service"
+port = 8000
+transport = "streamable_http"
+endpoint = "mcp/"
+
+[mcp_servers.news_service]
+host = "news_service"
+port = 8000
+transport = "streamable_http"
+endpoint = "mcp/"

@@ -26,12 +26,19 @@ Configuration merging is centralized in the `common` package via the `BaseServic
 *   **Fail-Fast Startup:** Using Pydantic's `ConfigDict(extra="forbid")`, services will crash immediately upon startup if required fields are missing, if types are incorrect (e.g., passing a string to a port integer), or if unrecognized configuration keys are present.
 *   **Singleton Pattern:** Service configurations will be loaded using Python's `@lru_cache` on the `get_config()` function, ensuring the file I/O parsing only happens once and memory is shared across the service lifecycle.
 
+### 4. Agent Model and MCP Configuration
+The `agent_service` owns model and agent-tool runtime settings:
+*   **Bedrock model settings:** `model_id`, required `region_name`, `temperature`, and `max_tokens` are validated in `agent_service/schema.py`.
+*   **AWS credentials:** Credentials are never stored in `config.toml`; Bedrock uses the standard AWS provider chain such as environment variables, shared profiles, or runtime IAM roles.
+*   **MCP server settings:** `wiki_service` and `news_service` connection settings define host, port, transport, and endpoint path so the Tool Registry can discover tools from both services.
+
 ## Consequences
 
 ### Positive
 *   **Type Safety:** Agents and services interact with Python objects (`config.service.port`), not raw dictionaries or easily misspelled string keys.
 *   **Security:** Clear boundaries ensure developers know exactly where to put API keys without risking accidental commits.
 *   **Deployment Flexibility:** In our Docker Compose environment, we can seamlessly override nested TOML settings using environment variables with a double-underscore delimiter (e.g., `SERVICE__PORT=8080`).
+*   **Model Portability:** Bedrock model IDs and regions can change without editing graph code, while missing regions fail before the first model call.
 
 ### Negative
 *   **Boilerplate:** Every new service requires the creation of a `schema.py` and explicit Pydantic models before it can read simple settings.

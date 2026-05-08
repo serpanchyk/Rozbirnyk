@@ -11,45 +11,19 @@ from mcp import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamablehttp_client
 
+from agent_service.tools.registry import ROLE_PROFILES, TOOL_BINDINGS, AgentRole
+
 logger = setup_logger("mcp_manager")
 
 MCPTransport = Literal["streamable_http", "sse"]
 
 WIKI_TOOL_ALLOWLISTS: dict[str, frozenset[str]] = {
-    "world_builder": frozenset(
-        {
-            "read_state_file",
-            "edit_state_file",
-            "read_timeline",
-            "read_actor_file",
-            "edit_actor_file",
-        }
-    ),
-    "simulation_orchestrator": frozenset(
-        {
-            "read_state_file",
-            "edit_state_file",
-            "read_timeline",
-            "append_to_timeline",
-            "read_actor_file",
-            "edit_actor_file",
-            "delete_file",
-        }
-    ),
-    "actor": frozenset(
-        {
-            "read_state_file",
-            "read_timeline",
-            "append_to_actor_memory",
-        }
-    ),
-    "report_agent": frozenset(
-        {
-            "read_state_file",
-            "read_timeline",
-            "read_actor_file",
-        }
-    ),
+    role.value: frozenset(
+        TOOL_BINDINGS[capability].tool_name
+        for capability in capabilities
+        if TOOL_BINDINGS[capability].server_name == "wiki_service"
+    )
+    for role, capabilities in ROLE_PROFILES.items()
 }
 
 
@@ -66,7 +40,11 @@ def filter_wiki_tools_for_role(tools: list[BaseTool], role: str) -> list[BaseToo
     Raises:
         ValueError: If the role is not configured.
     """
-    allowed = WIKI_TOOL_ALLOWLISTS.get(role)
+    try:
+        agent_role = AgentRole(role)
+    except ValueError as error:
+        raise ValueError(f"Unknown Wiki tool role: {role}") from error
+    allowed = WIKI_TOOL_ALLOWLISTS.get(agent_role.value)
     if allowed is None:
         raise ValueError(f"Unknown Wiki tool role: {role}")
     return [tool for tool in tools if tool.name in allowed]

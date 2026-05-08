@@ -3,6 +3,7 @@ Pydantic schema for agent_service configuration.
 """
 
 from functools import lru_cache
+from typing import Literal
 
 from common.config import BaseServiceConfig
 from pydantic import BaseModel, ConfigDict, Field
@@ -24,6 +25,46 @@ class LoggingSettings(BaseModel):
     level: str = Field(default="INFO")
 
 
+class ModelSettings(BaseModel):
+    """Configure the Bedrock chat model used by agent graphs."""
+
+    model_config = ConfigDict(extra="forbid")
+    model_id: str = Field(default="anthropic.claude-sonnet-4-20250514-v1:0")
+    region_name: str = Field(min_length=1)
+    temperature: float = Field(default=0.2, ge=0.0, le=1.0)
+    max_tokens: int = Field(default=4096, gt=0)
+
+
+class MCPServerSettings(BaseModel):
+    """Configure one remote MCP server connection."""
+
+    model_config = ConfigDict(extra="forbid")
+    host: str
+    port: int
+    transport: Literal["streamable_http", "sse"] = Field(default="streamable_http")
+    endpoint: str | None = Field(default=None)
+
+    @property
+    def url(self) -> str:
+        """Return the complete MCP endpoint URL."""
+        endpoint = self.endpoint
+        if endpoint is None:
+            endpoint = "mcp/" if self.transport == "streamable_http" else "sse"
+        return f"http://{self.host}:{self.port}/{endpoint.lstrip('/')}"
+
+
+class MCPServersSettings(BaseModel):
+    """Configure MCP services used by agent graphs."""
+
+    model_config = ConfigDict(extra="forbid")
+    wiki_service: MCPServerSettings = Field(
+        default_factory=lambda: MCPServerSettings(host="wiki_service", port=8000)
+    )
+    news_service: MCPServerSettings = Field(
+        default_factory=lambda: MCPServerSettings(host="news_service", port=8000)
+    )
+
+
 class AgentServiceConfig(BaseServiceConfig):
     """
     Main configuration model for agent_service.
@@ -31,6 +72,8 @@ class AgentServiceConfig(BaseServiceConfig):
 
     service: ServiceSettings = Field(default_factory=ServiceSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
+    model: ModelSettings
+    mcp_servers: MCPServersSettings = Field(default_factory=MCPServersSettings)
 
     model_config = BaseServiceConfig.model_config | {"env_nested_delimiter": "__"}
 

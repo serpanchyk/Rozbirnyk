@@ -33,7 +33,7 @@ The interface strictly for the LangGraph agents during the simulation loop.
 *   `append_to_actor_memory`: Appends an entry to an actor's private memory.
 *   `delete_file`: Deletes one specific Wiki file except `Timeline.md`, which is never deleted through MCP.
 
-The MCP tool surface is scoped per agent role:
+The MCP tool surface is scoped per agent role by the `agent_service` Tool Registry. The registry maps internal capability IDs to concrete MCP tools, exposes stable model-facing names such as `wiki_read_state_file`, and injects system-controlled values such as `session_id` from LangGraph state instead of letting the model provide them.
 
 | Agent | Allowed Wiki MCP Tools |
 | --- | --- |
@@ -55,8 +55,8 @@ Agents have zero access to API-side lifecycle endpoints such as reset. API conte
 ### Negative
 *   **Increased Boilerplate:** The `wiki_service` requires defining both FastAPI routers and FastMCP tools, slightly increasing the codebase size.
 *   **State Syncing:** We must ensure that a REST API call (like a reset) safely aborts or locks out any pending MCP tool calls from agents that are currently mid-loop.
-*   **Permission Drift:** The MCP adapter layer must keep role-specific tool allowlists synchronized with the documented tool matrix.
+*   **Permission Drift:** The Tool Registry must keep role profiles synchronized with the documented capability matrix.
 
 ### Mitigation
 *   All file-system I/O logic will be abstracted into a core manager module. Both the API endpoints and the MCP tools will wrap these same core functions to ensure consistent error handling and file locking.
-*   Role-specific MCP allowlists will be represented as explicit configuration or constants in the agent service, with tests that verify each agent receives only the tools listed in this ADR.
+*   Role-specific MCP profiles are represented as explicit capability constants in the agent service, with tests that verify the World Builder receives only News research tools plus the Wiki tools listed in this ADR.
