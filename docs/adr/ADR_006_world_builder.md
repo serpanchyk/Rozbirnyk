@@ -33,6 +33,8 @@ The World Builder receives its tools through the `agent_service` Tool Registry. 
 
 The registry exposes stable model-facing names such as `news_search_recent_news` and `wiki_edit_state_file`. For Wiki tools, `session_id` is injected from LangGraph state and is not exposed as a model-controlled argument.
 
+Role profiles and capability bindings are validated by the Tool Registry before tools are resolved. If a role references a capability without a binding, the registry raises a configuration error that names the role capability instead of surfacing a lower-level dictionary lookup failure. MCP discovery errors are also wrapped with the failing server name so startup failures distinguish `news_service` from `wiki_service`.
+
 ### 3. Model Runtime
 The production model path is created through `LLMService`, which hides provider-specific model construction from agents. The initial provider is AWS Bedrock via `ChatBedrockConverse`. `agent_service/config.toml` stores non-sensitive defaults for `provider`, `model_id`, required `region_name`, `temperature`, and `max_tokens`; credentials remain in the standard AWS environment, profile, or IAM role chain. Agents receive the active bindable model object and do not know which provider or model-switching path produced it.
 
@@ -56,4 +58,4 @@ Once the Wiki is fully populated, the World Builder **terminates**. It does not 
 ### Mitigation
 *   The Builder's system prompt will include strict constraints to limit the maximum number of generated actors and state files to prevent context bloat and excessive startup times.
 *   We will leverage the Hybrid API/MCP Architecture (ADR 006) to stream the Builder's progress to the frontend, providing UX feedback to the user while the world is being constructed.
-*   Registry tests fail loudly when required capabilities are missing, exposed tool names collide, or disallowed Wiki mutation tools appear in the World Builder profile.
+*   Registry tests fail loudly when required capabilities are missing, role profiles drift from capability bindings, exposed tool names collide, or disallowed Wiki mutation tools appear in the World Builder profile.

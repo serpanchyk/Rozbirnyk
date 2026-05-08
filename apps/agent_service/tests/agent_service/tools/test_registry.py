@@ -4,7 +4,9 @@ from collections.abc import Awaitable, Callable
 from typing import Annotated, Any, TypedDict, cast
 
 import pytest
+from agent_service.tools import registry as registry_module
 from agent_service.tools.registry import AgentRole, ToolRegistry
+from agent_service.tools.roles import ToolCapability
 from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.tools import BaseTool, tool
 from langgraph.graph import END, START, StateGraph
@@ -168,6 +170,30 @@ def test_rejects_missing_required_capability() -> None:
 
     with pytest.raises(LookupError, match="Missing MCP tool"):
         registry.resolve_for_role(AgentRole.WORLD_BUILDER)
+
+
+def test_rejects_role_profile_without_capability_binding(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify role and binding drift fails with a clear error."""
+    monkeypatch.delitem(
+        registry_module.TOOL_BINDINGS,
+        ToolCapability.NEWS_SEARCH_RECENT,
+    )
+
+    with pytest.raises(ValueError, match="Missing binding for capability"):
+        _make_registry().resolve_for_role(AgentRole.WORLD_BUILDER)
+
+
+def test_validates_role_profile_bindings(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify module-level role profile validation reports binding drift."""
+    monkeypatch.delitem(
+        registry_module.TOOL_BINDINGS,
+        ToolCapability.NEWS_SEARCH_RECENT,
+    )
+
+    with pytest.raises(ValueError, match="references missing binding"):
+        registry_module.validate_role_profile_bindings()
 
 
 def test_model_facing_tool_names_are_unique() -> None:

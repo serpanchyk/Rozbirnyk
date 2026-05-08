@@ -1,10 +1,11 @@
 """Define Pydantic schemas for agent_service configuration."""
 
 from functools import lru_cache
-from typing import Literal
+from typing import Literal, Self
+from urllib.parse import urlparse
 
 from common.config import BaseServiceConfig
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ServiceSettings(BaseModel):
@@ -41,10 +42,19 @@ class MCPServerSettings(BaseModel):
     """Configure one remote MCP server connection."""
 
     model_config = ConfigDict(extra="forbid")
-    host: str
-    port: int
+    host: str = Field(min_length=1)
+    port: int = Field(gt=0, le=65535)
     transport: Literal["streamable_http", "sse"] = Field(default="streamable_http")
     endpoint: str | None = Field(default=None)
+
+    @model_validator(mode="after")
+    def validate_url_format(self) -> Self:
+        """Validate the computed MCP endpoint URL shape."""
+        parsed = urlparse(self.url)
+        if parsed.scheme not in {"http", "https"} or parsed.hostname is None:
+            msg = f"Invalid MCP server URL: {self.url}"
+            raise ValueError(msg)
+        return self
 
     @property
     def url(self) -> str:

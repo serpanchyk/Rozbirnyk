@@ -30,7 +30,7 @@ Configuration merging is centralized in the `common` package via the `BaseServic
 The `agent_service` owns model and agent-tool runtime settings:
 *   **LLM model settings:** `provider`, `model_id`, required `region_name`, `temperature`, and `max_tokens` are validated in `agent_service/schema.py`.
 *   **AWS credentials:** Credentials are never stored in `config.toml`; Bedrock uses the standard AWS provider chain such as environment variables, shared profiles, or runtime IAM roles.
-*   **MCP server settings:** `wiki_service` and `news_service` connection settings define host, port, transport, and endpoint path so the Tool Registry can discover tools from both services.
+*   **MCP server settings:** `wiki_service` and `news_service` connection settings define host, port, transport, and endpoint path so the Tool Registry can discover tools from both services. Host, port, and computed endpoint URL format are validated during configuration load; service reachability is checked later during MCP tool discovery so startup errors identify the failing MCP service.
 
 ## Consequences
 

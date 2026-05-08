@@ -32,11 +32,19 @@ class MCPToolDiscovery:
         self._settings = settings
 
     async def discover(self) -> dict[str, list[BaseTool]]:
-        """Return discovered tools grouped by MCP server name."""
+        """Return discovered tools grouped by MCP server name.
+
+        Raises:
+            RuntimeError: If a configured MCP service cannot be queried.
+        """
         client = MultiServerMCPClient(self._build_connections())
         discovered: dict[str, list[BaseTool]] = {}
         for server_name in DISCOVERED_SERVER_NAMES:
-            discovered[server_name] = await client.get_tools(server_name=server_name)
+            try:
+                discovered[server_name] = await client.get_tools(server_name=server_name)
+            except Exception as error:
+                msg = f"Failed to discover tools from {server_name}: {error}"
+                raise RuntimeError(msg) from error
         return discovered
 
     def _build_connections(self) -> dict[str, MCPConnection]:

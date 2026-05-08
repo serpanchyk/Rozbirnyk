@@ -16,6 +16,19 @@ from agent_service.tools.roles import (
 from agent_service.tools.wrappers import wrap_tool
 
 
+def validate_role_profile_bindings() -> None:
+    """Verify every role capability has a configured MCP tool binding.
+
+    Raises:
+        ValueError: If a role references a capability without a binding.
+    """
+    for role, capabilities in ROLE_PROFILES.items():
+        for capability in capabilities:
+            if capability not in TOOL_BINDINGS:
+                msg = f"Role {role} references missing binding for {capability}"
+                raise ValueError(msg)
+
+
 class DiscoveredToolIndex:
     """Index discovered MCP tools by server and tool name."""
 
@@ -94,11 +107,34 @@ class RoleToolResolver:
         resolved_tools: list[BaseTool] = []
         exposed_names: set[str] = set()
         for capability in capabilities:
-            binding = TOOL_BINDINGS[capability]
+            binding = self._binding_for(agent_role, capability)
             self._ensure_unique_exposed_name(binding, exposed_names)
             original_tool = self._tool_index.get(binding)
             resolved_tools.append(wrap_tool(original_tool, binding))
         return resolved_tools
+
+    def _binding_for(
+        self,
+        role: AgentRole,
+        capability: ToolCapability,
+    ) -> CapabilityBinding:
+        """Return the binding for one role capability.
+
+        Args:
+            role: Role whose profile references the capability.
+            capability: Internal capability being resolved.
+
+        Returns:
+            Capability binding used to find and wrap a discovered MCP tool.
+
+        Raises:
+            ValueError: If the role profile references an unbound capability.
+        """
+        binding = TOOL_BINDINGS.get(capability)
+        if binding is None:
+            msg = f"Missing binding for capability {capability} in role {role}"
+            raise ValueError(msg)
+        return binding
 
     def _ensure_unique_exposed_name(
         self,
@@ -161,4 +197,7 @@ __all__ = [
     "RoleToolResolver",
     "ToolCapability",
     "ToolRegistry",
+    "validate_role_profile_bindings",
 ]
+
+validate_role_profile_bindings()
