@@ -7,7 +7,7 @@ This document is the canonical startup guide for Rozbirnyk in local development.
 - Python 3.12+
 - `uv`
 - Node.js 20+ and `npm`
-- Docker and Docker Compose for the full-stack path
+- Docker and Docker Compose
 - `TAVILY_API_KEY` for `news_service`
 - AWS credentials plus a Bedrock-compatible model or inference profile ID for
   `agent_service`
@@ -28,40 +28,31 @@ npm install
 cd ../..
 ```
 
-## Configure Environment Files
+## Docker Quick Start
 
-Copy the example files before running the stack:
+Copy the shared Docker Compose environment file:
 
 ```bash
 cp .env.example .env
-cp apps/backend/.env.example apps/backend/.env
-cp apps/agent_service/.env.example apps/agent_service/.env
-cp apps/frontend/.env.example apps/frontend/.env
-cp mcp_servers/news_service/.env.example mcp_servers/news_service/.env
-cp mcp_servers/wiki_service/.env.example mcp_servers/wiki_service/.env
 ```
 
-What each file is for:
+Fill in the required values in `.env`:
 
-- `.env.example`: shared Docker Compose environment such as Redis defaults and
-  optional AWS profile pass-through.
-- `apps/backend/.env.example`: optional backend port and upstream overrides for local runs.
-- `apps/agent_service/.env.example`: optional local MCP endpoint overrides,
-  World Builder limits, and LangSmith tracing settings.
-- `apps/frontend/.env.example`: frontend backend URL for Vite.
-- `mcp_servers/news_service/.env.example`: required `TAVILY_API_KEY` plus optional service overrides.
-- `mcp_servers/wiki_service/.env.example`: optional wiki service port, logging, and storage overrides.
+```bash
+TAVILY_API_KEY=replace-me
+```
 
 Notes:
 
-- Replace `TAVILY_API_KEY=replace-me` in `mcp_servers/news_service/.env`.
+- Docker Compose auto-loads the repo-root `.env` for variable substitution, but
+  only the Docker-specific settings declared in `docker-compose.yaml` are
+  passed into containers.
 - AWS credentials for `agent_service` are still expected from normal AWS environment variables, shared profiles, or IAM roles; they are not loaded from these example files by the app config layer.
 - LangSmith tracing is optional. Leave
   `OBSERVABILITY__LANGSMITH__ENABLED=false` unless you want World Builder runs
   traced from `agent_service`.
-- For Docker Compose, the root `.env` and each service `.env` file explicitly
-  listed under `env_file` in `docker-compose.yaml` are loaded into that
-  container.
+- Service-local `.env.example` files remain available for direct per-service
+  local runs; they are not required for Docker Compose startup.
 - For direct local service runs, the Python services read `.env` from their own working directory through `BaseServiceConfig`.
 
 ## Configure Amazon Bedrock Access
@@ -77,7 +68,6 @@ Supported local approaches:
   `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN`.
 
 Region handling:
-
 - Bedrock model region is configured in `apps/agent_service/config.toml`.
 - Override it for local runs with `MODEL__REGION_NAME=<aws-region>` in
   `apps/agent_service/.env` or in the shell.
@@ -157,7 +147,26 @@ Inspect logs with:
 docker compose logs -f backend
 ```
 
+If you want a shorter restart command after the first build:
+
+```bash
+docker compose up
+```
+
 ## Run Services Locally
+
+Use this path only when you intentionally want to work on one service outside
+Docker Compose.
+
+Copy the service-local example files you need:
+
+```bash
+cp apps/backend/.env.example apps/backend/.env
+cp apps/agent_service/.env.example apps/agent_service/.env
+cp apps/frontend/.env.example apps/frontend/.env
+cp mcp_servers/news_service/.env.example mcp_servers/news_service/.env
+cp mcp_servers/wiki_service/.env.example mcp_servers/wiki_service/.env
+```
 
 Open a separate terminal for each service.
 

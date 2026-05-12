@@ -139,6 +139,11 @@ Non-sensitive service defaults live in each service's `config.toml`. Sensitive
 values and environment-specific overrides belong in `.env` files and environment
 variables.
 
+For Docker Compose, the default startup path uses only the repo-root `.env`.
+Compose reads that file for startup variables, but only the explicitly mapped
+Docker settings are injected into containers. Service-local `.env` files are
+reserved for direct per-service local runs.
+
 Important configuration values:
 
 | Service | Local config file | Default internal port |
@@ -172,6 +177,14 @@ Install all extras and development dependencies:
 ```bash
 uv sync --all-extras
 ```
+
+Prepare the shared Docker Compose environment:
+
+```bash
+cp .env.example .env
+```
+
+Set `TAVILY_API_KEY` in `.env` before starting the stack.
 
 Run the complete local stack:
 

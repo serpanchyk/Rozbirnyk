@@ -91,6 +91,10 @@ next.
 - 2026-05-12: Architecture docs were refreshed to reflect the current deployed
   slice, adding ADRs for backend session orchestration, agent-service run
   management, and the React/Vite frontend while updating Mermaid diagrams.
+- 2026-05-12: Docker Compose startup was simplified to one repo-root `.env`
+  plus `docker compose up --build`; service-local `.env` files are now treated
+  as direct local-run overrides only, and Compose declares underscore network
+  aliases to match existing internal service hostnames.
 
 ## Open Questions / Risks
 
