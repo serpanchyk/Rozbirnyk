@@ -56,6 +56,43 @@ Notes:
 - For Docker Compose, the root `.env` and service `.env` files are read through `env_file`.
 - For direct local service runs, the Python services read `.env` from their own working directory through `BaseServiceConfig`.
 
+## Configure Amazon Bedrock Access
+
+`agent_service` uses AWS Bedrock through the normal AWS credential provider
+chain. Do not put AWS secrets into the repo `.env` files.
+
+Supported local approaches:
+
+- Use `aws configure` and the default shared profile.
+- Use a named shared profile and export `AWS_PROFILE=<profile-name>`.
+- Export temporary shell credentials such as `AWS_ACCESS_KEY_ID`,
+  `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN`.
+
+Region handling:
+
+- Bedrock model region is configured in `apps/agent_service/config.toml`.
+- Override it for local runs with `MODEL__REGION_NAME=<aws-region>` in
+  `apps/agent_service/.env` or in the shell.
+- Keep the configured model ID and region aligned with a region where that model
+  is enabled in your AWS account.
+
+Minimal local verification:
+
+```bash
+aws sts get-caller-identity
+aws bedrock list-foundation-models --region us-east-1
+```
+
+If `agent_service` fails at startup or on first model call:
+
+- Confirm the AWS identity has Bedrock permissions.
+- Confirm the selected model is enabled in the configured region.
+- Confirm `MODEL__REGION_NAME` matches the region you are querying.
+- If using Docker Compose, export `AWS_PROFILE` or AWS credential variables in
+  the shell before `docker compose up --build` so Compose can pass them through
+  from the environment or from service-level env files you control outside the
+  repo.
+
 ## Run The Full Stack With Docker
 
 From the repo root:
