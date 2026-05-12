@@ -1,9 +1,10 @@
 """Unit tests for LLM service configuration and model switching."""
 
+import os
 from unittest.mock import patch
 
 import pytest
-from agent_service.schema import AgentServiceConfig, ModelSettings
+from agent_service.schema import AgentServiceConfig, LangSmithSettings, ModelSettings
 from agent_service.services.llm import LLMService
 from pydantic import ValidationError
 
@@ -25,8 +26,11 @@ def test_llm_service_creates_configured_model() -> None:
         )
     )
 
-    with patch("agent_service.services.llm.ChatBedrockConverse") as model_cls:
-        service = LLMService.from_config(config)
+    with patch.dict(os.environ, {}, clear=True):
+        with patch("agent_service.services.llm.ChatBedrockConverse") as model_cls:
+            service = LLMService.from_config(config)
+
+        assert os.environ["LANGSMITH_TRACING"] == "false"
 
     assert service.get_model() == model_cls.return_value
     model_cls.assert_called_once_with(
@@ -62,3 +66,26 @@ def test_llm_service_changes_models_without_agent_involvement() -> None:
         "temperature": 0.4,
         "max_tokens": 1024,
     }
+
+
+def test_llm_service_applies_langsmith_environment_when_enabled() -> None:
+    """Verify LangSmith settings are exposed through process environment."""
+    settings = ModelSettings(
+        model_id="anthropic.claude-sonnet-4-20250514-v1:0",
+        region_name="eu-central-1",
+    )
+    langsmith = LangSmithSettings(
+        enabled=True,
+        api_key="test-key",
+        project="rozbirnyk-dev",
+        endpoint="https://api.smith.langchain.com",
+    )
+
+    with patch.dict(os.environ, {}, clear=True):
+        with patch("agent_service.services.llm.ChatBedrockConverse"):
+            LLMService(settings, langsmith=langsmith)
+
+        assert os.environ["LANGSMITH_TRACING"] == "true"
+        assert os.environ["LANGSMITH_API_KEY"] == "test-key"
+        assert os.environ["LANGSMITH_PROJECT"] == "rozbirnyk-dev"
+        assert os.environ["LANGSMITH_ENDPOINT"] == "https://api.smith.langchain.com"

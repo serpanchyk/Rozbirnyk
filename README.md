@@ -146,7 +146,10 @@ The Agent service uses AWS Bedrock model settings in
 `apps/agent_service/config.toml`; for Claude 4 models, prefer an inference
 profile ID or ARN such as `us.anthropic.claude-sonnet-4-20250514-v1:0` instead
 of the raw foundation model ID. AWS credentials should come from normal AWS
-environment variables, shared profiles, or runtime IAM roles.
+environment variables, shared profiles, or runtime IAM roles. Optional
+LangSmith tracing lives under `observability.langsmith` in
+`apps/agent_service/config.toml` and can be overridden with
+`OBSERVABILITY__LANGSMITH__*` environment variables.
 
 ## Local Development
 
@@ -226,6 +229,11 @@ from `contextvars`:
 - `trace_id`
 - `session_id`
 - `user_id`
+
+`agent_service` can also emit optional LangSmith traces for World Builder
+workflow runs. When enabled, each trace carries `session_id`, `run_id`, and the
+effective actor/state-file limits so workflow execution can be correlated with
+service logs.
 
 In Docker Compose, inspect service logs directly with `docker compose logs` or
 via the stdout/stderr stream of locally started services.

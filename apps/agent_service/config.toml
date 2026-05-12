@@ -6,6 +6,10 @@ port = 8001
 [logging]
 level = "INFO"
 
+[observability.langsmith]
+enabled = false
+project = "rozbirnyk"
+
 [model]
 provider = "bedrock"
 model_id = "us.anthropic.claude-sonnet-4-20250514-v1:0"

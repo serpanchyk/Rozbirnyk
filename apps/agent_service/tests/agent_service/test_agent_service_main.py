@@ -2,8 +2,10 @@
 
 import asyncio
 from collections.abc import Sequence
+from unittest.mock import patch
 
 import pytest
+from agent_service.agents.world_builder import WorldBuilder
 from agent_service.main import create_app
 from agent_service.models import (
     WikiFileSummary,
@@ -216,6 +218,58 @@ async def test_run_manager_fails_when_actor_limit_is_exceeded() -> None:
 
     assert terminal_status == WorldBuilderStatus.FAILED
     assert "exceeding the limit" in (final_status.error or "")
+
+
+@pytest.mark.asyncio
+async def test_run_manager_attaches_trace_metadata_when_enabled() -> None:
+    async def fetch_wiki_files(_: str) -> list[WikiFileSummary]:
+        return []
+
+    class RecordingGraph:
+        def __init__(self) -> None:
+            self.configs: list[object] = []
+
+        async def ainvoke(self, state: object, config: object = None) -> dict[str, list[AIMessage]]:
+            self.configs.append(config)
+            return {"messages": [AIMessage(content="done")]}
+
+    graph = RecordingGraph()
+    manager = WorldBuilderRunManager(
+        model=FakeModel([AIMessage(content="done")]),
+        tool_registry=_make_registry(),
+        max_steps=8,
+        hard_limits=WorldBuilderLimits(max_actors=4, max_state_files=4),
+        fetch_wiki_files=fetch_wiki_files,
+        tracing_enabled=True,
+    )
+
+    def fake_create_graph(self: WorldBuilder) -> RecordingGraph:
+        return graph
+
+    with patch.object(WorldBuilder, "create_graph", fake_create_graph):
+        response = await manager.start_run(
+            WorldBuilderRunRequest(
+                session_id="scenario-1",
+                scenario="Brazil joins OPEC",
+                max_actors=3,
+                max_state_files=2,
+            )
+        )
+        terminal_status = await _wait_for_terminal_status(manager, response.run_id)
+
+    assert terminal_status == WorldBuilderStatus.COMPLETED
+    assert graph.configs == [
+        {
+            "run_name": "world_builder",
+            "tags": ["agent_service", "world_builder"],
+            "metadata": {
+                "session_id": "scenario-1",
+                "run_id": response.run_id,
+                "max_actors": 3,
+                "max_state_files": 2,
+            },
+        }
+    ]
 
 
 def test_run_api_exposes_latest_status() -> None:

@@ -24,6 +24,23 @@ class LoggingSettings(BaseModel):
     level: str = Field(default="INFO")
 
 
+class LangSmithSettings(BaseModel):
+    """Optional LangSmith tracing configuration."""
+
+    model_config = ConfigDict(extra="forbid")
+    enabled: bool = Field(default=False)
+    api_key: str | None = Field(default=None)
+    project: str = Field(default="rozbirnyk", min_length=1)
+    endpoint: str | None = Field(default=None)
+
+
+class ObservabilitySettings(BaseModel):
+    """Observability integrations."""
+
+    model_config = ConfigDict(extra="forbid")
+    langsmith: LangSmithSettings = Field(default_factory=LangSmithSettings)
+
+
 type ModelProvider = Literal["bedrock"]
 
 
@@ -95,6 +112,7 @@ class AgentServiceConfig(BaseServiceConfig):
 
     service: ServiceSettings = Field(default_factory=ServiceSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
+    observability: ObservabilitySettings = Field(default_factory=ObservabilitySettings)
     model: ModelSettings
     mcp_servers: MCPServersSettings = Field(default_factory=MCPServersSettings)
     world_builder: WorldBuilderSettings = Field(default_factory=WorldBuilderSettings)

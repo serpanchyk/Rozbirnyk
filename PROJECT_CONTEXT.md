@@ -55,7 +55,7 @@ next.
 - Record in-progress work, blockers, or near-term priorities as short bullets.
 - Remove stale items instead of letting the list grow forever.
 
-- No active tasks recorded yet.
+- No active tasks recorded.
 
 ## Recent Decisions / Notes
 
@@ -84,6 +84,9 @@ next.
   member for clean `uv run` imports, flattening news-service Tavily config back
   to `TAVILY_API_KEY`, and switching the default Bedrock Claude 4 setting to an
   inference-profile-compatible ID.
+- 2026-05-12: Frontend now uses a white-first theme with purple accents, and
+  `agent_service` can emit optional LangSmith traces for World Builder runs via
+  typed config, `.env` overrides, and per-run metadata.
 
 ## Open Questions / Risks
 
@@ -92,8 +95,6 @@ next.
 
 - Agent-service and backend session/run tracking are currently in-memory only;
   service restarts lose transient progress state.
-- World Builder progress is coarse status/stage polling, not the event model
-  planned in task 003.
 
 ## Next Update Checklist
 

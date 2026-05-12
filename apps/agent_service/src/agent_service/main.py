@@ -109,6 +109,7 @@ def _build_run_manager(config: AgentServiceConfig) -> WorldBuilderRunManager:
             max_state_files=config.world_builder.max_state_files,
         ),
         fetch_wiki_files=wiki_client.list_files,
+        tracing_enabled=config.observability.langsmith.enabled,
     )
 
 

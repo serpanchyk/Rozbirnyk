@@ -1,6 +1,4 @@
-"""
-Pydantic schema for news_service configuration.
-"""
+"""Pydantic schema for news_service configuration."""
 
 from functools import lru_cache
 
@@ -25,33 +23,30 @@ class LoggingSettings(BaseModel):
 
 
 class TavilySettings(BaseModel):
-    """Tavily configuration"""
+    """Tavily configuration."""
 
     model_config = ConfigDict(extra="forbid")
     api_key: str = Field(min_length=1)
 
 
 class NewsServiceConfig(BaseServiceConfig):
-    """
-    Main configuration model for news_service.
-    """
+    """Main configuration model for news_service."""
 
     service: ServiceSettings = Field(default_factory=ServiceSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
-    tavily_api_key: str = Field(validation_alias="TAVILY_API_KEY", repr=False)
+    tavily_api_key: str = Field(min_length=1, alias="TAVILY_API_KEY")
 
-    model_config = BaseServiceConfig.model_config | {"env_nested_delimiter": "__"}
+    model_config = BaseServiceConfig.model_config | {
+        "populate_by_name": True,
+    }
 
     @property
     def tavily(self) -> TavilySettings:
-        """Return Tavily settings through the legacy nested accessor."""
+        """Expose Tavily credentials through the existing nested interface."""
         return TavilySettings(api_key=self.tavily_api_key)
 
 
 @lru_cache
 def get_config() -> NewsServiceConfig:
-    """
-    Loads the configuration once and caches it.
-    Subsequent calls return the cached memory instance.
-    """
+    """Load and cache the service configuration."""
     return NewsServiceConfig()

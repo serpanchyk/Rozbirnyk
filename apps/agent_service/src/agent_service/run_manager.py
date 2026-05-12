@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from langchain_core.messages import BaseMessage
+from langchain_core.runnables import RunnableConfig
 
 from agent_service.agents.world_builder import WorldBuilder
 from agent_service.models import (
@@ -69,6 +70,7 @@ class WorldBuilderRunManager:
         max_steps: int,
         hard_limits: WorldBuilderLimits,
         fetch_wiki_files: FileFetcher,
+        tracing_enabled: bool = False,
     ) -> None:
         """Initialize the manager with runtime dependencies."""
         self._model = model
@@ -76,6 +78,7 @@ class WorldBuilderRunManager:
         self._max_steps = max_steps
         self._hard_limits = hard_limits
         self._fetch_wiki_files = fetch_wiki_files
+        self._tracing_enabled = tracing_enabled
         self._runs: dict[str, RunRecord] = {}
         self._active_run_ids_by_session: dict[str, str] = {}
 
@@ -179,7 +182,11 @@ class WorldBuilderRunManager:
                 max_actors=record.effective_limits.max_actors,
                 max_state_files=record.effective_limits.max_state_files,
             )
-            result = await graph.ainvoke(initial_state)
+            graph_run_config = self._build_graph_run_config(record)
+            if graph_run_config is None:
+                result = await graph.ainvoke(initial_state)
+            else:
+                result = await graph.ainvoke(initial_state, config=graph_run_config)
             self._update(record, stage=WorldBuilderStage.COLLECTING_SNAPSHOT)
             files = await self._fetch_wiki_files(record.session_id)
             self._emit_file_events(record, files)
@@ -287,6 +294,21 @@ class WorldBuilderRunManager:
         )
         record.events.append(progress_event)
         record.next_sequence += 1
+
+    def _build_graph_run_config(self, record: RunRecord) -> RunnableConfig | None:
+        """Build LangChain runnable config for traced World Builder executions."""
+        if not self._tracing_enabled:
+            return None
+        return {
+            "run_name": "world_builder",
+            "tags": ["agent_service", "world_builder"],
+            "metadata": {
+                "session_id": record.session_id,
+                "run_id": record.run_id,
+                "max_actors": record.effective_limits.max_actors,
+                "max_state_files": record.effective_limits.max_state_files,
+            },
+        }
 
     def _update(
         self,

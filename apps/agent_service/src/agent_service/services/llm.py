@@ -1,23 +1,31 @@
 """Manage provider-backed chat models for agent graph execution."""
 
+import os
 from typing import cast
 
 from langchain_aws import ChatBedrockConverse
 
 from agent_service.agents.base import ToolBindableModel
-from agent_service.schema import AgentServiceConfig, ModelSettings
+from agent_service.schema import AgentServiceConfig, LangSmithSettings, ModelSettings
 
 
 class LLMService:
     """Create and switch chat models without exposing providers to agents."""
 
-    def __init__(self, settings: ModelSettings) -> None:
+    def __init__(
+        self,
+        settings: ModelSettings,
+        langsmith: LangSmithSettings | None = None,
+    ) -> None:
         """Initialize the service with validated model settings.
 
         Args:
             settings: Model configuration used to create the initial chat model.
+            langsmith: Optional tracing configuration applied process-wide.
         """
         self._settings = settings
+        self._langsmith = langsmith or LangSmithSettings()
+        self._configure_langsmith_environment()
         self._model = self._create_model(settings)
 
     @classmethod
@@ -30,7 +38,7 @@ class LLMService:
         Returns:
             Service with the configured model already constructed.
         """
-        return cls(config.model)
+        return cls(config.model, langsmith=config.observability.langsmith)
 
     @property
     def settings(self) -> ModelSettings:
@@ -93,3 +101,13 @@ class LLMService:
             )
         msg = f"Unsupported LLM provider: {settings.provider}"
         raise ValueError(msg)
+
+    def _configure_langsmith_environment(self) -> None:
+        """Apply LangSmith tracing settings for LangChain and LangGraph runtimes."""
+        os.environ["LANGSMITH_TRACING"] = "true" if self._langsmith.enabled else "false"
+        if self._langsmith.api_key:
+            os.environ["LANGSMITH_API_KEY"] = self._langsmith.api_key
+        if self._langsmith.project:
+            os.environ["LANGSMITH_PROJECT"] = self._langsmith.project
+        if self._langsmith.endpoint:
+            os.environ["LANGSMITH_ENDPOINT"] = self._langsmith.endpoint

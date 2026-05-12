@@ -46,7 +46,8 @@ What each file is for:
 - `.env.example`: shared Docker Compose environment such as Redis defaults and
   optional AWS profile pass-through.
 - `apps/backend/.env.example`: optional backend port and upstream overrides for local runs.
-- `apps/agent_service/.env.example`: optional local MCP endpoint overrides and World Builder limits.
+- `apps/agent_service/.env.example`: optional local MCP endpoint overrides,
+  World Builder limits, and LangSmith tracing settings.
 - `apps/frontend/.env.example`: frontend backend URL for Vite.
 - `mcp_servers/news_service/.env.example`: required `TAVILY_API_KEY` plus optional service overrides.
 - `mcp_servers/wiki_service/.env.example`: optional wiki service port, logging, and storage overrides.
@@ -55,6 +56,9 @@ Notes:
 
 - Replace `TAVILY_API_KEY=replace-me` in `mcp_servers/news_service/.env`.
 - AWS credentials for `agent_service` are still expected from normal AWS environment variables, shared profiles, or IAM roles; they are not loaded from these example files by the app config layer.
+- LangSmith tracing is optional. Leave
+  `OBSERVABILITY__LANGSMITH__ENABLED=false` unless you want World Builder runs
+  traced from `agent_service`.
 - For Docker Compose, the root `.env` and each service `.env` file explicitly
   listed under `env_file` in `docker-compose.yaml` are loaded into that
   container.
@@ -104,6 +108,32 @@ If `agent_service` fails at startup or on first model call:
   the shell before `docker compose up --build` so Compose can pass them through
   from the environment or from service-level env files you control outside the
   repo.
+
+## Configure LangSmith Tracing
+
+`agent_service` supports optional LangSmith tracing for World Builder workflow
+runs.
+
+Enable it in `apps/agent_service/.env`:
+
+```bash
+OBSERVABILITY__LANGSMITH__ENABLED=true
+OBSERVABILITY__LANGSMITH__PROJECT=rozbirnyk
+OBSERVABILITY__LANGSMITH__API_KEY=your-langsmith-api-key
+```
+
+Optional override:
+
+```bash
+OBSERVABILITY__LANGSMITH__ENDPOINT=https://api.smith.langchain.com
+```
+
+Notes:
+
+- Tracing is emitted only by `agent_service` in this repo today.
+- Leave tracing disabled when you do not want workflow data sent to LangSmith.
+- Each traced World Builder run includes `session_id`, `run_id`, `max_actors`,
+  and `max_state_files` metadata.
 
 ## Run The Full Stack With Docker
 
