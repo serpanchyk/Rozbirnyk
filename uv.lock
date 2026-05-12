@@ -1893,7 +1893,7 @@ wheels = [
 [[package]]
 name = "rozbirnyk-agent-service"
 version = "0.1.0"
-source = { virtual = "apps/agent_service" }
+source = { editable = "apps/agent_service" }
 dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
@@ -1922,7 +1922,7 @@ requires-dist = [
 [[package]]
 name = "rozbirnyk-backend"
 version = "0.1.0"
-source = { virtual = "apps/backend" }
+source = { editable = "apps/backend" }
 dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
@@ -1967,7 +1967,7 @@ source = { virtual = "apps/frontend" }
 [[package]]
 name = "rozbirnyk-news-service"
 version = "0.1.0"
-source = { virtual = "mcp_servers/news_service" }
+source = { editable = "mcp_servers/news_service" }
 dependencies = [
     { name = "fastmcp" },
     { name = "rozbirnyk-common" },
@@ -1984,7 +1984,7 @@ requires-dist = [
 [[package]]
 name = "rozbirnyk-wiki-service"
 version = "0.1.0"
-source = { virtual = "mcp_servers/wiki_service" }
+source = { editable = "mcp_servers/wiki_service" }
 dependencies = [
     { name = "fastapi" },
     { name = "fastmcp" },

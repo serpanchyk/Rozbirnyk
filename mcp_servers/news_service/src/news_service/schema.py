@@ -28,7 +28,7 @@ class TavilySettings(BaseModel):
     """Tavily configuration"""
 
     model_config = ConfigDict(extra="forbid")
-    api_key: str = Field(validation_alias="TAVILY_API_KEY")
+    api_key: str = Field(min_length=1)
 
 
 class NewsServiceConfig(BaseServiceConfig):
@@ -38,10 +38,14 @@ class NewsServiceConfig(BaseServiceConfig):
 
     service: ServiceSettings = Field(default_factory=ServiceSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
-
-    tavily: TavilySettings
+    tavily_api_key: str = Field(validation_alias="TAVILY_API_KEY", repr=False)
 
     model_config = BaseServiceConfig.model_config | {"env_nested_delimiter": "__"}
+
+    @property
+    def tavily(self) -> TavilySettings:
+        """Return Tavily settings through the legacy nested accessor."""
+        return TavilySettings(api_key=self.tavily_api_key)
 
 
 @lru_cache

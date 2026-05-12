@@ -143,7 +143,9 @@ Important configuration values:
 
 The News service requires a Tavily API key exposed as `TAVILY_API_KEY`.
 The Agent service uses AWS Bedrock model settings in
-`apps/agent_service/config.toml`; AWS credentials should come from normal AWS
+`apps/agent_service/config.toml`; for Claude 4 models, prefer an inference
+profile ID or ARN such as `us.anthropic.claude-sonnet-4-20250514-v1:0` instead
+of the raw foundation model ID. AWS credentials should come from normal AWS
 environment variables, shared profiles, or runtime IAM roles.
 
 ## Local Development

@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "rozbirnyk_news_service"
 version = "0.1.0"
@@ -7,6 +11,9 @@ dependencies = [
     "rozbirnyk_common",
     "tavily-python>=0.7.23",
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/news_service"]
 
 [tool.uv.sources]
 rozbirnyk_common = { workspace = true }

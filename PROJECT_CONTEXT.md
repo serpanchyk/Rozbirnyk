@@ -80,6 +80,10 @@ next.
   directly to stdout/stderr.
 - 2026-05-12: Added `.env.example` files for the repo root and each service so
   local setup has explicit, copyable environment templates.
+- 2026-05-12: Local startup was hardened by packaging each Python workspace
+  member for clean `uv run` imports, flattening news-service Tavily config back
+  to `TAVILY_API_KEY`, and switching the default Bedrock Claude 4 setting to an
+  inference-profile-compatible ID.
 
 ## Open Questions / Risks
 

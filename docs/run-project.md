@@ -9,7 +9,8 @@ This document is the canonical startup guide for Rozbirnyk in local development.
 - Node.js 20+ and `npm`
 - Docker and Docker Compose for the full-stack path
 - `TAVILY_API_KEY` for `news_service`
-- AWS credentials for the Bedrock model used by `agent_service`
+- AWS credentials plus a Bedrock-compatible model or inference profile ID for
+  `agent_service`
 
 ## Install Dependencies
 
@@ -42,7 +43,8 @@ cp mcp_servers/wiki_service/.env.example mcp_servers/wiki_service/.env
 
 What each file is for:
 
-- `.env.example`: shared Docker Compose port and Redis defaults.
+- `.env.example`: shared Docker Compose environment such as Redis defaults and
+  optional AWS profile pass-through.
 - `apps/backend/.env.example`: optional backend port and upstream overrides for local runs.
 - `apps/agent_service/.env.example`: optional local MCP endpoint overrides and World Builder limits.
 - `apps/frontend/.env.example`: frontend backend URL for Vite.
@@ -53,7 +55,9 @@ Notes:
 
 - Replace `TAVILY_API_KEY=replace-me` in `mcp_servers/news_service/.env`.
 - AWS credentials for `agent_service` are still expected from normal AWS environment variables, shared profiles, or IAM roles; they are not loaded from these example files by the app config layer.
-- For Docker Compose, the root `.env` and service `.env` files are read through `env_file`.
+- For Docker Compose, the root `.env` and each service `.env` file explicitly
+  listed under `env_file` in `docker-compose.yaml` are loaded into that
+  container.
 - For direct local service runs, the Python services read `.env` from their own working directory through `BaseServiceConfig`.
 
 ## Configure Amazon Bedrock Access
@@ -73,8 +77,12 @@ Region handling:
 - Bedrock model region is configured in `apps/agent_service/config.toml`.
 - Override it for local runs with `MODEL__REGION_NAME=<aws-region>` in
   `apps/agent_service/.env` or in the shell.
-- Keep the configured model ID and region aligned with a region where that model
-  is enabled in your AWS account.
+- `MODEL__MODEL_ID` may be a raw foundation model ID, an inference profile ID,
+  or an inference profile ARN. For Claude 4 local development, prefer an
+  inference profile ID or ARN such as
+  `us.anthropic.claude-sonnet-4-20250514-v1:0`.
+- Keep the configured model/inference profile and region aligned with a region
+  where that resource is enabled in your AWS account.
 
 Minimal local verification:
 
@@ -86,8 +94,12 @@ aws bedrock list-foundation-models --region us-east-1
 If `agent_service` fails at startup or on first model call:
 
 - Confirm the AWS identity has Bedrock permissions.
-- Confirm the selected model is enabled in the configured region.
+- Confirm the selected model or inference profile is enabled in the configured
+  region.
 - Confirm `MODEL__REGION_NAME` matches the region you are querying.
+- If Bedrock reports that on-demand throughput is unsupported, switch
+  `MODEL__MODEL_ID` to an inference profile ID or ARN instead of the raw
+  foundation model ID.
 - If using Docker Compose, export `AWS_PROFILE` or AWS credential variables in
   the shell before `docker compose up --build` so Compose can pass them through
   from the environment or from service-level env files you control outside the
@@ -127,6 +139,7 @@ uv run python -m wiki_service.main
 ```
 
 Runs on `http://localhost:8003` when started from the default config.
+The checked-in `.env.example` already matches this local port.
 
 ### News service
 
@@ -143,6 +156,9 @@ override:
 cd mcp_servers/news_service
 SERVICE__PORT=8002 uv run python -m news_service.main
 ```
+
+Keep `mcp_servers/news_service/.env` at port `8000` for Docker Compose; use the
+one-line shell override above for the standard local multi-service stack.
 
 ### Agent service
 
