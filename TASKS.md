@@ -26,6 +26,24 @@ Related docs:
 - `docs/adr/ADR_002_logging.md`
 - `docs/run-project.md`
 
+### 008 — Add `.env.example` files for local setup
+
+Goal: Make local setup explicit by providing copyable environment templates for
+the repo root and each service.
+
+Status: Done
+
+Acceptance criteria:
+- `.env.example` exists at the repo root.
+- Each service directory has a matching `.env.example` where local configuration
+  is expected.
+- `docs/run-project.md` explains which example files to copy and which values
+  must be filled in manually.
+
+Related docs:
+- `PROJECT_CONTEXT.md`
+- `docs/run-project.md`
+
 ### 001 — Backend ↔ Agent Service World Builder Flow
 
 Goal: Let the backend start a World Builder run through agent-service, stream progress to the UI, and return the built world snapshot.

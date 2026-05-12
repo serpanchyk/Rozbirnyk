@@ -78,6 +78,8 @@ next.
 - 2026-05-12: Removed the local Elasticsearch, Kibana, and Fluentd stack from
   Docker Compose; local observability now relies on structured JSON logs written
   directly to stdout/stderr.
+- 2026-05-12: Added `.env.example` files for the repo root and each service so
+  local setup has explicit, copyable environment templates.
 
 ## Open Questions / Risks
 

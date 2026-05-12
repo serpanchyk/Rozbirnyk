@@ -27,6 +27,35 @@ npm install
 cd ../..
 ```
 
+## Configure Environment Files
+
+Copy the example files before running the stack:
+
+```bash
+cp .env.example .env
+cp apps/backend/.env.example apps/backend/.env
+cp apps/agent_service/.env.example apps/agent_service/.env
+cp apps/frontend/.env.example apps/frontend/.env
+cp mcp_servers/news_service/.env.example mcp_servers/news_service/.env
+cp mcp_servers/wiki_service/.env.example mcp_servers/wiki_service/.env
+```
+
+What each file is for:
+
+- `.env.example`: shared Docker Compose port and Redis defaults.
+- `apps/backend/.env.example`: optional backend port and upstream overrides for local runs.
+- `apps/agent_service/.env.example`: optional local MCP endpoint overrides and World Builder limits.
+- `apps/frontend/.env.example`: frontend backend URL for Vite.
+- `mcp_servers/news_service/.env.example`: required `TAVILY_API_KEY` plus optional service overrides.
+- `mcp_servers/wiki_service/.env.example`: optional wiki service port, logging, and storage overrides.
+
+Notes:
+
+- Replace `TAVILY_API_KEY=replace-me` in `mcp_servers/news_service/.env`.
+- AWS credentials for `agent_service` are still expected from normal AWS environment variables, shared profiles, or IAM roles; they are not loaded from these example files by the app config layer.
+- For Docker Compose, the root `.env` and service `.env` files are read through `env_file`.
+- For direct local service runs, the Python services read `.env` from their own working directory through `BaseServiceConfig`.
+
 ## Run The Full Stack With Docker
 
 From the repo root:
