@@ -95,6 +95,10 @@ next.
   plus `docker compose up --build`; service-local `.env` files are now treated
   as direct local-run overrides only, and Compose declares underscore network
   aliases to match existing internal service hostnames.
+- 2026-05-12: Docker Compose now consumes documented host-port variables,
+  fails fast when `TAVILY_API_KEY` is missing, and supports Bedrock auth through
+  either standard AWS environment variables or a read-only mounted shared AWS
+  credentials directory for `AWS_PROFILE`.
 
 ## Open Questions / Risks
 

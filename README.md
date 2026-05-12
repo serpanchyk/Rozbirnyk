@@ -143,6 +143,9 @@ For Docker Compose, the default startup path uses only the repo-root `.env`.
 Compose reads that file for startup variables, but only the explicitly mapped
 Docker settings are injected into containers. Service-local `.env` files are
 reserved for direct per-service local runs.
+The repo-root `.env.example` includes the default host ports consumed by
+`docker-compose.yaml`: backend `8000`, agent service `8001`, news service
+`8002`, wiki service `8003`, frontend `8501`, and Redis `6379`.
 
 Important configuration values:
 
@@ -159,8 +162,10 @@ The Agent service uses AWS Bedrock model settings in
 `apps/agent_service/config.toml`; for Claude 4 models, prefer an inference
 profile ID or ARN such as `us.anthropic.claude-sonnet-4-20250514-v1:0` instead
 of the raw foundation model ID. AWS credentials should come from normal AWS
-environment variables, shared profiles, or runtime IAM roles. Optional
-LangSmith tracing lives under `observability.langsmith` in
+environment variables, shared profiles, or runtime IAM roles. In Docker Compose,
+standard AWS credential variables are passed through and `${HOME}/.aws` is
+mounted read-only for `AWS_PROFILE` unless `AWS_SHARED_CREDENTIALS_DIR`
+overrides the source path. Optional LangSmith tracing lives under `observability.langsmith` in
 `apps/agent_service/config.toml` and can be overridden with
 `OBSERVABILITY__LANGSMITH__*` environment variables.
 
@@ -184,7 +189,8 @@ Prepare the shared Docker Compose environment:
 cp .env.example .env
 ```
 
-Set `TAVILY_API_KEY` in `.env` before starting the stack.
+Set `TAVILY_API_KEY` in `.env` before starting the stack. Compose fails fast if
+the key is missing.
 
 Run the complete local stack:
 

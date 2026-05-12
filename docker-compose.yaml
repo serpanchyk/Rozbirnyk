@@ -8,14 +8,21 @@ services:
       context: .
       dockerfile: apps/agent_service/Dockerfile
     ports:
-      - "8001:8001"
+      - "${AGENT_SERVICE_PORT:-8001}:8001"
     environment:
       - PYTHONUNBUFFERED=1
-      - AWS_PROFILE=${AWS_PROFILE:-}
+      - AWS_PROFILE
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
+      - AWS_REGION
+      - AWS_DEFAULT_REGION
       - OBSERVABILITY__LANGSMITH__ENABLED=${OBSERVABILITY__LANGSMITH__ENABLED:-false}
       - OBSERVABILITY__LANGSMITH__PROJECT=${OBSERVABILITY__LANGSMITH__PROJECT:-rozbirnyk}
       - OBSERVABILITY__LANGSMITH__API_KEY=${OBSERVABILITY__LANGSMITH__API_KEY:-}
       - OBSERVABILITY__LANGSMITH__ENDPOINT=${OBSERVABILITY__LANGSMITH__ENDPOINT:-}
+    volumes:
+      - ${AWS_SHARED_CREDENTIALS_DIR:-${HOME}/.aws}:/root/.aws:ro
     depends_on:
       news-service:
         condition: service_healthy
@@ -38,7 +45,7 @@ services:
       context: .
       dockerfile: apps/backend/Dockerfile
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     environment:
       - PYTHONUNBUFFERED=1
     depends_on:
@@ -61,9 +68,9 @@ services:
       context: .
       dockerfile: apps/frontend/Dockerfile
       args:
-        VITE_BACKEND_URL: http://localhost:8000
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-http://localhost:8000}
     ports:
-      - "8501:8501"
+      - "${FRONTEND_PORT:-8501}:8501"
     environment:
       - NODE_ENV=production
     depends_on:
@@ -85,10 +92,10 @@ services:
       context: .
       dockerfile: mcp_servers/news_service/Dockerfile
     ports:
-      - "8002:8000"
+      - "${NEWS_SERVICE_PORT:-8002}:8000"
     environment:
       - PYTHONUNBUFFERED=1
-      - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY:?Set TAVILY_API_KEY in the repo-root .env file}
     depends_on:
       redis:
         condition: service_healthy
@@ -109,7 +116,7 @@ services:
       context: .
       dockerfile: mcp_servers/wiki_service/Dockerfile
     ports:
-      - "8003:8000"
+      - "${WIKI_SERVICE_PORT:-8003}:8000"
     environment:
       - PYTHONUNBUFFERED=1
     volumes:
@@ -132,7 +139,7 @@ services:
     container_name: rozbirnyk-redis
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
