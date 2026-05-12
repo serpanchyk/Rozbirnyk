@@ -1,24 +1,28 @@
 # --- Stage 1: Build ---
-FROM astral-sh/uv:python3.12-bookworm-slim AS builder
+FROM node:20-bookworm-slim AS builder
 
-WORKDIR /app
+WORKDIR /app/apps/frontend
 
-ENV UV_COMPILE_BYTECODE=1
+COPY apps/frontend/package.json apps/frontend/package-lock.json ./
+RUN npm ci
 
-RUN --mount=type=bind,source=.,target=/app \
-    uv sync --frozen --no-dev --no-editable --package rozbirnyk_frontend
+COPY apps/frontend/ ./
+
+ARG VITE_BACKEND_URL=http://localhost:8000
+ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
+
+RUN npm run build
 
 # --- Stage 2: Runtime ---
-FROM python:3.12-slim-bookworm
+FROM node:20-bookworm-slim
 
-WORKDIR /app
+WORKDIR /app/apps/frontend
 
-COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /app/apps/frontend/package.json ./package.json
+COPY --from=builder /app/apps/frontend/package-lock.json ./package-lock.json
+COPY --from=builder /app/apps/frontend/node_modules ./node_modules
+COPY --from=builder /app/apps/frontend/dist ./dist
 
-COPY apps/frontend/src ./src
-COPY apps/frontend/config.toml ./config.toml
+EXPOSE 8501
 
-ENV PATH="/app/.venv/bin:$PATH"
-ENV PYTHONPATH="/app/src"
-
-CMD ["streamlit", "run", "src/frontend/main.py"]
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "8501"]

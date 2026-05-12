@@ -27,7 +27,7 @@ The Agent does not simply summarize the text. It uses a structured prompt to eva
 *   **Actor Outcomes:** A summary of which entities achieved their goals and which failed.
 
 ### 3. Execution Handoff
-Once the Orchestrator hits a termination condition (ADR 009), it signals the core `agent_service` API. The API then spins up the Report Agent, passes it the session ID/Trace ID, and waits for the final markdown report to serve to the Streamlit UI.
+Once the Orchestrator hits a termination condition (ADR 009), it signals the core `agent_service` API. The API then spins up the Report Agent, passes it the session ID/Trace ID, and waits for the final markdown report to serve to the frontend UI.
 
 ## Consequences
 

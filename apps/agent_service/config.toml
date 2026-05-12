@@ -22,5 +22,9 @@ endpoint = "mcp/"
 [mcp_servers.news_service]
 host = "news_service"
 port = 8000
-transport = "streamable_http"
-endpoint = "mcp/"
+transport = "sse"
+
+[world_builder]
+max_steps = 8
+max_actors = 8
+max_state_files = 12

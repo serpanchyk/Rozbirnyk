@@ -2,9 +2,7 @@
 name = "rozbirnyk_frontend"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = [
-    "rozbirnyk_common",
-]
+dependencies = []
 
 [tool.uv.sources]
 rozbirnyk_common = { workspace = true }

@@ -54,6 +54,8 @@ Never:
 If behavior/architecture/config changes:
 - update relevant docs in @docs/
 - update @PROJECT_CONTEXT.md
+- read @TASKS.md for current work and update
+- after ending the task, make the commit
 
 ---
 

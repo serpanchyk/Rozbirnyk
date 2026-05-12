@@ -14,7 +14,7 @@ class ServiceSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: str = Field(default="news_service")
     version: str = Field(default="0.1.0")
-    port: int = Field(default=8003)
+    port: int = Field(default=8000)
 
 
 class LoggingSettings(BaseModel):

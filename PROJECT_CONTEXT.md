@@ -12,7 +12,7 @@ next.
 - Goal: Turn "What if" prompts into grounded multi-agent simulations with a
   world wiki, chronological timeline, and final report.
 - Primary stack: Python 3.12+, uv workspaces, FastAPI/FastMCP, LangGraph,
-  Streamlit, Docker, Redis, Ruff, mypy, pytest.
+  React/Vite, Docker, Redis, Ruff, mypy, pytest.
 - Core principle: Keep simulation state auditable through Markdown world files
   and structured logs.
 
@@ -20,7 +20,7 @@ next.
 
 - `apps/agent_service`: agent orchestration, tool registry, LangGraph flow
 - `apps/backend`: backend application boundary
-- `apps/frontend`: Streamlit UI boundary
+- `apps/frontend`: React/Vite UI boundary
 - `mcp_servers/news_service`: Tavily-backed research tools with caching
 - `mcp_servers/wiki_service`: session wiki and timeline storage/API
 - `packages/common`: shared config, caching, and structured logging
@@ -67,13 +67,26 @@ next.
 
 - 2026-05-11: Created `PROJECT_CONTEXT.md` as the canonical short handoff file
   for cross-agent and cross-chat continuity.
+- 2026-05-11: World Builder flow now exposes typed progress events in
+  agent-service, backend streams them over SSE, and the frontend consumes live
+  updates through a React/Vite UI on port `8501`.
+- 2026-05-11: The old Streamlit frontend has been replaced by a JavaScript
+  frontend in `apps/frontend`.
+- 2026-05-11: Added `docs/run-project.md` as the canonical local startup guide
+  for Docker and per-service development commands.
+- 2026-05-11: News service defaults now align on SSE transport at internal port
+  `8000`, and Docker Compose health checks/port mappings were corrected for the
+  live stack.
 
 ## Open Questions / Risks
 
 - Fill this section only with unresolved items that can change implementation
   direction.
 
-- None recorded yet.
+- Agent-service and backend session/run tracking are currently in-memory only;
+  service restarts lose transient progress state.
+- World Builder progress is coarse status/stage polling, not the event model
+  planned in task 003.
 
 ## Next Update Checklist
 

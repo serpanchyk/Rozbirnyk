@@ -34,7 +34,7 @@ their own conflicting context or mutate shared state independently.
 ├── apps/
 │   ├── agent_service/      # LangGraph-facing orchestration and MCP integration
 │   ├── backend/            # Backend application boundary
-│   └── frontend/           # Streamlit-facing user interface boundary
+│   └── frontend/           # React/Vite user interface boundary
 ├── mcp_servers/
 │   ├── news_service/       # Tavily-backed MCP tools for current research
 │   └── wiki_service/       # Markdown World Wiki API and MCP tools
@@ -123,7 +123,7 @@ goals, policies, and private memory.
 - LangChain MCP adapters and LangGraph for orchestration loops
 - AWS Bedrock via `langchain-aws` for production chat models
 - Redis for tool-result caching
-- Streamlit for the frontend boundary
+- React and Vite for the frontend boundary
 - Docker Compose for local service orchestration
 - Fluentd, Elasticsearch, and Kibana for local structured log aggregation
 - Ruff, mypy, pytest, pytest-asyncio, and coverage
@@ -140,8 +140,8 @@ Important configuration values:
 | --- | --- | --- |
 | Backend | `apps/backend/config.toml` | `8000` |
 | Agent service | `apps/agent_service/config.toml` | `8001` |
-| Frontend | `apps/frontend/config.toml` | `8501` |
-| News service | `mcp_servers/news_service/config.toml` | `8003` |
+| Frontend | `apps/frontend/.env` (`VITE_BACKEND_URL`) | `8501` |
+| News service | `mcp_servers/news_service/config.toml` | `8000` |
 | Wiki service | `mcp_servers/wiki_service/config.toml` | `8000` |
 
 The News service requires a Tavily API key exposed as `TAVILY_API_KEY`.
@@ -168,6 +168,9 @@ Run the complete local stack:
 ```bash
 docker compose up --build
 ```
+
+Detailed startup instructions for Docker and per-service local development live in
+`docs/run-project.md`.
 
 Run one service:
 

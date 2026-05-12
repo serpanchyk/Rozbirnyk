@@ -73,8 +73,21 @@ class MCPServersSettings(BaseModel):
         default_factory=lambda: MCPServerSettings(host="wiki_service", port=8000)
     )
     news_service: MCPServerSettings = Field(
-        default_factory=lambda: MCPServerSettings(host="news_service", port=8000)
+        default_factory=lambda: MCPServerSettings(
+            host="news_service",
+            port=8000,
+            transport="sse",
+        )
     )
+
+
+class WorldBuilderSettings(BaseModel):
+    """Configure the World Builder runtime limits."""
+
+    model_config = ConfigDict(extra="forbid")
+    max_steps: int = Field(default=8, gt=0)
+    max_actors: int = Field(default=8, gt=0)
+    max_state_files: int = Field(default=12, gt=0)
 
 
 class AgentServiceConfig(BaseServiceConfig):
@@ -84,6 +97,7 @@ class AgentServiceConfig(BaseServiceConfig):
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
     model: ModelSettings
     mcp_servers: MCPServersSettings = Field(default_factory=MCPServersSettings)
+    world_builder: WorldBuilderSettings = Field(default_factory=WorldBuilderSettings)
 
     model_config = BaseServiceConfig.model_config | {"env_nested_delimiter": "__"}
 

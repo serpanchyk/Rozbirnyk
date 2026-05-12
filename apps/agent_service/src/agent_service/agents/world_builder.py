@@ -76,6 +76,8 @@ class WorldBuilder(AgentBase[WorldBuilderState]):
         self,
         scenario: str,
         session_id: str,
+        max_actors: int | None = None,
+        max_state_files: int | None = None,
         messages: Sequence[BaseMessage] | None = None,
         remaining_steps: int | None = None,
     ) -> WorldBuilderState:
@@ -84,6 +86,8 @@ class WorldBuilder(AgentBase[WorldBuilderState]):
         Args:
             scenario: User's What-if scenario.
             session_id: Wiki session identifier controlled by the system.
+            max_actors: Hard limit for actor files in this run.
+            max_state_files: Hard limit for state files in this run.
             messages: Optional initial conversation messages.
             remaining_steps: Maximum model turns before termination.
 
@@ -96,6 +100,8 @@ class WorldBuilder(AgentBase[WorldBuilderState]):
         return self.build_state(
             scenario=scenario,
             session_id=session_id,
+            max_actors=max_actors,
+            max_state_files=max_state_files,
             messages=messages,
             remaining_steps=initial_remaining_steps,
         )
@@ -104,6 +110,8 @@ class WorldBuilder(AgentBase[WorldBuilderState]):
     def build_state(
         scenario: str,
         session_id: str,
+        max_actors: int | None = None,
+        max_state_files: int | None = None,
         messages: Sequence[BaseMessage] | None = None,
         remaining_steps: int = DEFAULT_MAX_STEPS,
     ) -> WorldBuilderState:
@@ -112,18 +120,25 @@ class WorldBuilder(AgentBase[WorldBuilderState]):
         Args:
             scenario: User's What-if scenario.
             session_id: Wiki session identifier controlled by the system.
+            max_actors: Hard limit for actor files in this run.
+            max_state_files: Hard limit for state files in this run.
             messages: Optional initial conversation messages.
             remaining_steps: Maximum model turns before termination.
 
         Returns:
             Initial state accepted by the compiled World Builder graph.
         """
-        return {
+        state: WorldBuilderState = {
             "messages": list(messages or [HumanMessage(content=f"What if {scenario}")]),
             "scenario": scenario,
             "session_id": session_id,
             "remaining_steps": remaining_steps,
         }
+        if max_actors is not None:
+            state["max_actors"] = max_actors
+        if max_state_files is not None:
+            state["max_state_files"] = max_state_files
+        return state
 
     async def _model_node(
         self,
@@ -155,7 +170,21 @@ class WorldBuilder(AgentBase[WorldBuilderState]):
             user_messages = list(messages)
         else:
             user_messages = [HumanMessage(content=f"What if {state['scenario']}")]
-        return [SystemMessage(content=WORLD_BUILDER_SYSTEM_PROMPT), *user_messages]
+        return [SystemMessage(content=self._build_system_prompt(state)), *user_messages]
+
+    def _build_system_prompt(self, state: WorldBuilderState) -> str:
+        """Build the system prompt with run-specific limits."""
+        prompt = WORLD_BUILDER_SYSTEM_PROMPT
+        limits: list[str] = []
+        max_actors = state.get("max_actors")
+        max_state_files = state.get("max_state_files")
+        if max_actors is not None:
+            limits.append(f"- Create at most {max_actors} actor files.")
+        if max_state_files is not None:
+            limits.append(f"- Create at most {max_state_files} state files.")
+        if not limits:
+            return prompt
+        return f"{prompt}\n\nLimits:\n" + "\n".join(limits)
 
     def _route_after_model(self, state: WorldBuilderState) -> Literal["tools", "__end__"]:
         """Route to tools when the latest model message requested tool calls."""
@@ -202,6 +231,8 @@ def create_world_builder_graph(
 def build_world_builder_initial_state(
     scenario: str,
     session_id: str,
+    max_actors: int | None = None,
+    max_state_files: int | None = None,
     messages: Sequence[BaseMessage] | None = None,
     remaining_steps: int = DEFAULT_MAX_STEPS,
 ) -> WorldBuilderState:
@@ -210,6 +241,8 @@ def build_world_builder_initial_state(
     Args:
         scenario: User's What-if scenario.
         session_id: Wiki session identifier controlled by the system.
+        max_actors: Hard limit for actor files in this run.
+        max_state_files: Hard limit for state files in this run.
         messages: Optional initial conversation messages.
         remaining_steps: Maximum model turns before termination.
 
@@ -219,6 +252,8 @@ def build_world_builder_initial_state(
     return WorldBuilder.build_state(
         scenario=scenario,
         session_id=session_id,
+        max_actors=max_actors,
+        max_state_files=max_state_files,
         messages=messages,
         remaining_steps=remaining_steps,
     )

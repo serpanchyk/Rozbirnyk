@@ -3,7 +3,7 @@
 ```mermaid
 flowchart TB
     subgraph apps["apps"]
-        frontend["frontend\nStreamlit user interface"]
+        frontend["frontend\nReact/Vite user interface"]
         backend["backend\nApplication API boundary"]
         agent["agent_service\nLangGraph agents and MCP integration"]
     end
@@ -49,4 +49,3 @@ flowchart TB
     wiki -. structured logs .-> fluentd
     fluentd --> logs
 ```
-
