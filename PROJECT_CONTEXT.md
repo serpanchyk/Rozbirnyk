@@ -47,6 +47,7 @@ next.
 - Repo shape: Multi-package workspace with app, MCP server, common package, and
   infra boundaries already defined
 - Simulation model: World Builder -> Orchestrator -> Actors -> Report Agent
+- Implemented runtime slice: Frontend -> Backend -> World Builder -> Wiki
 - State model: Markdown timeline plus state and actor files per session
 
 ## Active Tasks
@@ -87,6 +88,9 @@ next.
 - 2026-05-12: Frontend now uses a white-first theme with purple accents, and
   `agent_service` can emit optional LangSmith traces for World Builder runs via
   typed config, `.env` overrides, and per-run metadata.
+- 2026-05-12: Architecture docs were refreshed to reflect the current deployed
+  slice, adding ADRs for backend session orchestration, agent-service run
+  management, and the React/Vite frontend while updating Mermaid diagrams.
 
 ## Open Questions / Risks
 

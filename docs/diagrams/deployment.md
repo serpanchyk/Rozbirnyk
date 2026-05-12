@@ -14,17 +14,20 @@ flowchart TB
     browser["Browser"]
     tavily["Tavily API"]
     bedrock["AWS Bedrock"]
+    langsmith["LangSmith (optional)"]
     wiki_volume[("wiki-data volume")]
     logs["docker compose logs"]
 
     browser --> frontend
-    frontend --> backend
-    backend --> agent
-    agent --> news
-    agent --> wiki
+    frontend -->|"HTTP + SSE"| backend
+    backend -->|"HTTP"| agent
+    backend -->|"HTTP"| wiki
+    agent -->|"MCP over HTTP"| news
+    agent -->|"MCP over HTTP"| wiki
     news --> redis
     news --> tavily
     agent --> bedrock
+    agent -. optional .-> langsmith
     wiki --> wiki_volume
     frontend -. logs .-> logs
     backend -. logs .-> logs

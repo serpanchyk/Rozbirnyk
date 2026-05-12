@@ -1,10 +1,10 @@
-# ADR 010: Post-Simulation Synthesis via the Report Agent
+# ADR 009: Post-Simulation Synthesis via the Report Agent
 
 ## Status
 Accepted
 
 ## Context
-Rozbirnyk is fundamentally a political forecasting tool. The Simulation Orchestrator (ADR 009) and the Actors generate a rigorous, chronologically accurate audit trail of events in `Timeline.md`, along with mutated `States/` and `Actors/` Markdown files. 
+Rozbirnyk is fundamentally a political forecasting tool. The Simulation Orchestrator (ADR 008) and the Actors generate a rigorous, chronologically accurate audit trail of events in `Timeline.md`, along with mutated `States/` and `Actors/` Markdown files. 
 
 However, a raw log of validated agent actions is not a forecast; it is a database of events. Human decision-makers and users require a digestible, analytical narrative that explains *why* the simulated future unfolded the way it did, highlights key turning points, and directly answers the original "What if" query. We need a mechanism to translate raw simulation state into high-value intelligence.
 
@@ -27,7 +27,7 @@ The Agent does not simply summarize the text. It uses a structured prompt to eva
 *   **Actor Outcomes:** A summary of which entities achieved their goals and which failed.
 
 ### 3. Execution Handoff
-Once the Orchestrator hits a termination condition (ADR 009), it signals the core `agent_service` API. The API then spins up the Report Agent, passes it the session ID/Trace ID, and waits for the final markdown report to serve to the frontend UI.
+Once the Orchestrator hits a termination condition (ADR 008), it signals the core `agent_service` API. The API then spins up the Report Agent, passes it the session ID/Trace ID, and waits for the final markdown report to serve to the frontend UI.
 
 ## Consequences
 

@@ -27,6 +27,11 @@ A simulation run follows four phases:
 The project separates these responsibilities so that agents do not all fetch
 their own conflicting context or mutate shared state independently.
 
+Today, the implemented vertical slice stops after the World Builder phase. The
+frontend, backend, agent-service, and wiki snapshot flow are live; the later
+Simulation Orchestrator, Actor turn loop, and Report Agent remain documented
+target architecture.
+
 ## Repository Layout
 
 ```text
@@ -69,6 +74,9 @@ The planned agent roles are:
 | Simulation Orchestrator | Validate actions and mutate the official world state | Read/write state, actors, and timeline; delete obsolete wiki files |
 | Actor | Propose actions from a durable character sheet | Read state and timeline; append private memory |
 | Report Agent | Produce the final forecast narrative | Read-only access to state, timeline, and actor files |
+
+Only the World Builder execution path is implemented in `agent_service` today.
+The remaining roles are defined as architecture and tool-policy targets.
 
 ### News Service
 
@@ -252,6 +260,9 @@ Start with:
 - `docs/adr/ADR_007_actors.md` for actor character sheets
 - `docs/adr/ADR_008_simulation_orchestrator.md` for centralized validation
 - `docs/adr/ADR_009_report_agent.md` for final report synthesis
+- `docs/adr/ADR_010_backend_session_api.md` for backend session orchestration
+- `docs/adr/ADR_011_agent_service_world_builder_runtime.md` for run management
+- `docs/adr/ADR_012_frontend_live_progress_ui.md` for the browser UI contract
 
 When code changes alter behavior, architecture, or configuration, update the
 corresponding files in `docs/`.

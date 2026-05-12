@@ -1,4 +1,4 @@
-# ADR 006: Hybrid API/MCP Architecture for Wiki Service
+# ADR 005: Hybrid API/MCP Architecture for Wiki Service
 
 ## Status
 Accepted

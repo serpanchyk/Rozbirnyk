@@ -4,23 +4,25 @@
 flowchart LR
     user["User"]
     frontend["Frontend\nReact/Vite UI"]
-    backend["Backend\nApplication boundary"]
-    agent["Agent Service\nLangGraph orchestration"]
+    backend["Backend\nsession API"]
+    agent["Agent Service\nWorld Builder execution"]
     news["News MCP Service\nTavily research tools"]
     tavily["Tavily API\nCurrent context"]
     wiki["Wiki Service\nHTTP API and MCP tools"]
     storage["World Wiki Storage\nTimeline.md, States, Actors"]
-    report["Final Narrative Report"]
+    langsmith["LangSmith\noptional traces"]
+    roadmap["Planned later phases\nOrchestrator -> Actors -> Report"]
 
     user -->|"What if? scenario"| frontend
-    frontend -->|"submit scenario\nview progress"| backend
-    backend -->|"start and monitor run"| agent
+    frontend -->|"submit scenario\nview progress over SSE"| backend
+    backend -->|"reset session wiki\nlist final files"| wiki
+    backend -->|"start and monitor World Builder"| agent
     agent -->|"research current context"| news
     news -->|"search and extract"| tavily
-    agent -->|"read and write world state"| wiki
+    agent -->|"read/write initial wiki files"| wiki
     wiki -->|"persist session artifacts"| storage
-    agent -->|"produce synthesis"| report
-    report -->|"forecast narrative"| backend
-    backend -->|"result stream"| frontend
-    frontend -->|"timeline, wiki, report"| user
+    agent -.->|"optional traced run metadata"| langsmith
+    backend -->|"status + file summaries"| frontend
+    frontend -->|"world-build progress\nand file snapshot"| user
+    roadmap -. future .-> agent
 ```

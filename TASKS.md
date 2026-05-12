@@ -8,6 +8,28 @@ None.
 
 ## Done Recently
 
+### 011 — Refresh architecture documentation and diagrams
+
+Goal: Bring ADRs, diagrams, and handoff docs in line with the current
+backend/frontend/agent-service architecture and the implemented World Builder
+runtime slice.
+
+Status: Done
+
+Acceptance criteria:
+- ADR numbering is internally consistent.
+- Missing architecture decisions are recorded for backend session orchestration,
+  agent-service run management, and the React/Vite frontend.
+- Mermaid diagrams describe the real current runtime path and clearly mark
+  planned later phases.
+- `README.md` and `PROJECT_CONTEXT.md` match the updated architecture story.
+
+Related docs:
+- `PROJECT_CONTEXT.md`
+- `README.md`
+- `docs/adr/`
+- `docs/diagrams/`
+
 ### 010 — Refresh frontend to white theme and add LangSmith tracing
 
 Goal: Update the frontend visual direction to a white/light theme and add
