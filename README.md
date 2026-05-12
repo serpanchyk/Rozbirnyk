@@ -43,8 +43,6 @@ their own conflicting context or mutate shared state independently.
 ├── docs/
 │   ├── VISION.md           # Product and simulation vision
 │   └── adr/                # Architecture decision records
-├── infra/
-│   └── logging/fluentd/    # Local JSON log forwarding pipeline
 ├── docker-compose.yaml
 ├── pyproject.toml
 └── uv.lock
@@ -125,7 +123,6 @@ goals, policies, and private memory.
 - Redis for tool-result caching
 - React and Vite for the frontend boundary
 - Docker Compose for local service orchestration
-- Fluentd, Elasticsearch, and Kibana for local structured log aggregation
 - Ruff, mypy, pytest, pytest-asyncio, and coverage
 
 ## Configuration
@@ -216,9 +213,6 @@ The Compose stack includes:
 | `rozbirnyk-news` | Tavily MCP service | `8002` |
 | `rozbirnyk-wiki` | Wiki API and MCP service | `8003` |
 | `rozbirnyk-redis` | Cache store | `6379` |
-| `rozbirnyk-elasticsearch` | Log storage | `9200` |
-| `rozbirnyk-kibana` | Log exploration UI | `5601` |
-| `rozbirnyk-fluentd` | Log forwarder | `24224` |
 
 Wiki session files are stored in the `wiki-data` Docker volume.
 
@@ -231,8 +225,8 @@ from `contextvars`:
 - `session_id`
 - `user_id`
 
-In Docker Compose, service logs are forwarded through Fluentd into
-Elasticsearch, with Kibana available for local inspection.
+In Docker Compose, inspect service logs directly with `docker compose logs` or
+via the stdout/stderr stream of locally started services.
 
 ## Documentation
 

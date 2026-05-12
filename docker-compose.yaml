@@ -21,13 +21,6 @@ services:
         condition: service_healthy
       wiki-service:
         condition: service_healthy
-      fluentd:
-        condition: service_healthy
-    logging:
-      driver: "fluentd"
-      options:
-        fluentd-address: localhost:24224
-        tag: agent-service
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.settimeout(2); s.connect((\"localhost\", 8001)); s.close()'"]
       interval: 10s
@@ -50,13 +43,6 @@ services:
     depends_on:
       agent-service:
         condition: service_healthy
-      fluentd:
-        condition: service_healthy
-    logging:
-      driver: "fluentd"
-      options:
-        fluentd-address: localhost:24224
-        tag: backend
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.settimeout(2); s.connect((\"localhost\", 8000)); s.close()'"]
       interval: 10s
@@ -81,13 +67,6 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-      fluentd:
-        condition: service_healthy
-    logging:
-      driver: "fluentd"
-      options:
-        fluentd-address: localhost:24224
-        tag: frontend
     healthcheck:
       test: ["CMD-SHELL", "node -e 'fetch(\"http://localhost:8501\").then((response)=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))'"]
       interval: 10s
@@ -113,13 +92,6 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-      fluentd:
-        condition: service_healthy
-    logging:
-      driver: "fluentd"
-      options:
-        fluentd-address: localhost:24224
-        tag: news-service
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.settimeout(2); s.connect((\"localhost\", 8000)); s.close()'"]
       interval: 10s
@@ -140,14 +112,6 @@ services:
       - PYTHONUNBUFFERED=1
     volumes:
       - wiki-data:/data/wiki
-    depends_on:
-      fluentd:
-        condition: service_healthy
-    logging:
-      driver: "fluentd"
-      options:
-        fluentd-address: localhost:24224
-        tag: wiki-service
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.settimeout(2); s.connect((\"localhost\", 8000)); s.close()'"]
       interval: 10s
@@ -158,52 +122,6 @@ services:
   # ----------------------------------------
   # 3. 3rd-party services
   # ----------------------------------------
-  elasticsearch:
-    container_name: rozbirnyk-elasticsearch
-    image: elasticsearch:8.13.0
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
-    ports:
-      - "9200:9200"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s -f http://localhost:9200/_cluster/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
-  fluentd:
-    container_name: rozbirnyk-fluentd
-    image: fluent/fluentd:v1.16-debian-1
-    volumes:
-      - ./infra/logging/fluentd/fluent.conf:/fluentd/etc/fluent.conf
-    ports:
-      - "24224:24224"
-      - "24224:24224/udp"
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "ruby -e 'require \"socket\"; begin; TCPSocket.new(\"127.0.0.1\", 24224); rescue; exit 1; end'"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  kibana:
-    container_name: rozbirnyk-kibana
-    image: kibana:8.13.0
-    ports:
-      - "5601:5601"
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s -f http://localhost:5601/api/status || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 10
-
   redis:
     container_name: rozbirnyk-redis
     image: redis:7-alpine

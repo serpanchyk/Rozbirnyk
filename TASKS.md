@@ -8,6 +8,24 @@ None.
 
 ## Done Recently
 
+### 007 — Remove local EFK observability stack
+
+Goal: Simplify local development by removing Elasticsearch, Kibana, and Fluentd
+from Docker Compose while preserving structured JSON logs.
+
+Status: Done
+
+Acceptance criteria:
+- Docker Compose no longer defines Elasticsearch, Kibana, or Fluentd services.
+- Application services still emit structured JSON logs.
+- Startup and observability docs describe direct stdout or `docker compose logs`
+  usage instead of Kibana-based inspection.
+
+Related docs:
+- `PROJECT_CONTEXT.md`
+- `docs/adr/ADR_002_logging.md`
+- `docs/run-project.md`
+
 ### 001 — Backend ↔ Agent Service World Builder Flow
 
 Goal: Let the backend start a World Builder run through agent-service, stream progress to the UI, and return the built world snapshot.

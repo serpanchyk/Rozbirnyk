@@ -24,8 +24,6 @@ next.
 - `mcp_servers/news_service`: Tavily-backed research tools with caching
 - `mcp_servers/wiki_service`: session wiki and timeline storage/API
 - `packages/common`: shared config, caching, and structured logging
-- `infra/logging/fluentd`: local log pipeline
-
 ## Canonical Docs
 
 - Product vision: `docs/VISION.md`
@@ -77,6 +75,9 @@ next.
 - 2026-05-11: News service defaults now align on SSE transport at internal port
   `8000`, and Docker Compose health checks/port mappings were corrected for the
   live stack.
+- 2026-05-12: Removed the local Elasticsearch, Kibana, and Fluentd stack from
+  Docker Compose; local observability now relies on structured JSON logs written
+  directly to stdout/stderr.
 
 ## Open Questions / Risks
 

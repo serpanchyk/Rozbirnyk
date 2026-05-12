@@ -42,8 +42,12 @@ Main URLs after startup:
 - Agent service: `http://localhost:8001`
 - News service: `http://localhost:8002`
 - Wiki service: `http://localhost:8003`
-- Kibana: `http://localhost:5601`
-- Elasticsearch: `http://localhost:9200`
+
+Inspect logs with:
+
+```bash
+docker compose logs -f backend
+```
 
 ## Run Services Locally
 

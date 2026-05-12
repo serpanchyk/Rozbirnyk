@@ -17,15 +17,11 @@ flowchart TB
         common["common\nconfig, cache, logging helpers"]
     end
 
-    subgraph infra["infra"]
-        fluentd["logging/fluentd\nJSON log forwarding"]
-    end
-
     redis["Redis\ncache backend"]
     bedrock["AWS Bedrock\nchat models"]
     tavily["Tavily\nnews and article context"]
     wiki_data["wiki-data volume\nMarkdown session state"]
-    logs["Elasticsearch and Kibana\nlog storage and exploration"]
+    logs["Structured JSON logs\nstdout or docker compose logs"]
 
     frontend --> backend
     backend --> agent
@@ -42,10 +38,9 @@ flowchart TB
     news -. imports .-> common
     wiki -. imports .-> common
 
-    frontend -. structured logs .-> fluentd
-    backend -. structured logs .-> fluentd
-    agent -. structured logs .-> fluentd
-    news -. structured logs .-> fluentd
-    wiki -. structured logs .-> fluentd
-    fluentd --> logs
+    frontend -. structured logs .-> logs
+    backend -. structured logs .-> logs
+    agent -. structured logs .-> logs
+    news -. structured logs .-> logs
+    wiki -. structured logs .-> logs
 ```
