@@ -4,7 +4,12 @@ import os
 from unittest.mock import patch
 
 import pytest
-from agent_service.schema import AgentServiceConfig, LangSmithSettings, ModelSettings
+from agent_service.schema import (
+    AgentServiceConfig,
+    LangSmithSettings,
+    ModelSettings,
+    ObservabilitySettings,
+)
 from agent_service.services.llm import LLMService
 from pydantic import ValidationError
 
@@ -23,7 +28,8 @@ def test_llm_service_creates_configured_model() -> None:
             region_name="eu-central-1",
             temperature=0.1,
             max_tokens=2048,
-        )
+        ),
+        observability=ObservabilitySettings(langsmith=LangSmithSettings(enabled=False)),
     )
 
     with patch.dict(os.environ, {}, clear=True):

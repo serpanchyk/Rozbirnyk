@@ -38,6 +38,7 @@ class NewsServiceConfig(BaseServiceConfig):
 
     model_config = BaseServiceConfig.model_config | {
         "populate_by_name": True,
+        "env_nested_delimiter": "__",
     }
 
     @property

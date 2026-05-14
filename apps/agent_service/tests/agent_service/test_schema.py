@@ -1,5 +1,8 @@
 """Unit tests for agent service configuration schemas."""
 
+import os
+from unittest.mock import patch
+
 import pytest
 from agent_service.schema import AgentServiceConfig, MCPServerSettings
 from pydantic import ValidationError
@@ -37,7 +40,8 @@ def test_mcp_server_settings_rejects_invalid_port() -> None:
 
 def test_agent_service_config_defaults_langsmith_tracing_to_disabled() -> None:
     """Verify tracing is opt-in in the default service config."""
-    config = AgentServiceConfig.model_validate({"model": {"region_name": "us-east-1"}})
+    with patch.dict(os.environ, {}, clear=True):
+        config = AgentServiceConfig(_env_file=None, model={"region_name": "us-east-1"})
 
     assert config.observability.langsmith.enabled is False
     assert config.observability.langsmith.project == "rozbirnyk"

@@ -99,6 +99,11 @@ next.
   fails fast when `TAVILY_API_KEY` is missing, and supports Bedrock auth through
   either standard AWS environment variables or a read-only mounted shared AWS
   credentials directory for `AWS_PROFILE`.
+- 2026-05-14: Project startup policy now defaults agents to Docker Compose and
+  runs `docker compose down --remove-orphans` before rebuilding the stack.
+  Local ignored `.env` files were synchronized with examples, LangSmith tracing
+  was enabled for LangGraph runs, and news-service config now supports the
+  documented nested service env overrides alongside flat `TAVILY_API_KEY`.
 
 ## Open Questions / Risks
 

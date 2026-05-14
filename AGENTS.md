@@ -40,6 +40,8 @@ Rules:
 - structured JSON logging
 - minimal dependencies
 - production-ready only
+- use Docker Compose to run the project unless the user explicitly asks for a
+  direct per-service local run
 
 Never:
 - use `print()`
@@ -77,4 +79,7 @@ Run:
 - understand service responsibility first
 - prefer incremental changes over refactors
 - preserve observability
+- when starting the project, run
+  `DOCKER_CONTEXT=default docker compose down --remove-orphans` before
+  `DOCKER_CONTEXT=default docker compose up --build -d`
 - when reading logs/CLI output, check the tail first

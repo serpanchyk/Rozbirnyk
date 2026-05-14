@@ -8,6 +8,27 @@ None.
 
 ## Done Recently
 
+### 013 — Harden Docker startup and local env parity
+
+Goal: Make clean Docker Compose startup the default agent workflow, enable
+LangSmith tracing for LangGraph runs, and align local environment files with
+their examples.
+
+Status: Done
+
+Acceptance criteria:
+- Agent and human startup docs run `docker compose down --remove-orphans`
+  before rebuilding the stack.
+- Agent rules default to Docker Compose startup unless the user says otherwise.
+- Local ignored `.env` files contain the keys from their matching examples
+  without exposing or replacing existing secrets.
+- News service local config uses the documented `TAVILY_API_KEY` name.
+
+Related docs:
+- `AGENTS.md`
+- `PROJECT_CONTEXT.md`
+- `docs/run-project.md`
+
 ### 012 — Simplify Docker Compose startup
 
 Goal: Make Docker Compose the primary startup path with one shared `.env` file

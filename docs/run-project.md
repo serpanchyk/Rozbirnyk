@@ -60,6 +60,9 @@ Notes:
 - Docker Compose auto-loads the repo-root `.env` for variable substitution, but
   only the Docker-specific settings declared in `docker-compose.yaml` are
   passed into containers.
+- Local Docker startup should first remove stale Compose containers and
+  orphaned containers. This does not remove named volumes unless you explicitly
+  add `-v`.
 - `TAVILY_API_KEY` is required for Compose startup. If it is missing, Compose
   stops before building the stack instead of starting a broken news service.
 - AWS credentials for `agent_service` are still expected from normal AWS
@@ -148,10 +151,12 @@ Notes:
 
 ## Run The Full Stack With Docker
 
-From the repo root:
+From the repo root, always clear stale Compose containers before building and
+starting the stack:
 
 ```bash
-docker compose up --build
+DOCKER_CONTEXT=default docker compose down --remove-orphans
+DOCKER_CONTEXT=default docker compose up --build -d
 ```
 
 Main URLs after startup:
@@ -168,10 +173,10 @@ Inspect logs with:
 docker compose logs -f backend
 ```
 
-If you want a shorter restart command after the first build:
+If you intentionally do not need a clean recreate after the first build:
 
 ```bash
-docker compose up
+DOCKER_CONTEXT=default docker compose up -d
 ```
 
 Useful checks:
@@ -200,7 +205,8 @@ docker context use default
 or run Compose with the system daemon for only that command:
 
 ```bash
-DOCKER_CONTEXT=default docker compose up --build
+DOCKER_CONTEXT=default docker compose down --remove-orphans
+DOCKER_CONTEXT=default docker compose up --build -d
 ```
 
 If Docker reports `permission denied` while stopping or recreating a container,
@@ -211,6 +217,7 @@ Compose again:
 
 ```bash
 sudo systemctl restart docker
+DOCKER_CONTEXT=default docker compose down --remove-orphans
 DOCKER_CONTEXT=default docker compose up --build -d
 ```
 
