@@ -3,7 +3,6 @@ services:
   # 1. The Core Application
   # ----------------------------------------
   agent-service:
-    container_name: rozbirnyk-agent
     build:
       context: .
       dockerfile: apps/agent_service/Dockerfile
@@ -40,7 +39,6 @@ services:
     restart: unless-stopped
 
   backend:
-    container_name: rozbirnyk-backend
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
@@ -63,7 +61,6 @@ services:
     restart: unless-stopped
 
   frontend:
-    container_name: rozbirnyk-frontend
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
@@ -87,7 +84,6 @@ services:
   # 2. The MCP Microservices
   # ----------------------------------------
   news-service:
-    container_name: rozbirnyk-news
     build:
       context: .
       dockerfile: mcp_servers/news_service/Dockerfile
@@ -111,7 +107,6 @@ services:
     restart: unless-stopped
 
   wiki-service:
-    container_name: rozbirnyk-wiki
     build:
       context: .
       dockerfile: mcp_servers/wiki_service/Dockerfile
@@ -136,7 +131,6 @@ services:
   # 3. 3rd-party services
   # ----------------------------------------
   redis:
-    container_name: rozbirnyk-redis
     image: redis:7-alpine
     ports:
       - "${REDIS_PORT:-6379}:6379"

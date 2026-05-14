@@ -3,12 +3,12 @@
 ```mermaid
 flowchart TB
     subgraph compose["Docker Compose network"]
-        frontend["rozbirnyk-frontend\nhost 8501"]
-        backend["rozbirnyk-backend\nhost 8000"]
-        agent["rozbirnyk-agent\nhost 8001"]
-        news["rozbirnyk-news\nhost 8002"]
-        wiki["rozbirnyk-wiki\nhost 8003"]
-        redis["rozbirnyk-redis\nhost 6379"]
+        frontend["frontend service\nhost 8501"]
+        backend["backend service\nhost 8000"]
+        agent["agent-service\nhost 8001"]
+        news["news-service\nhost 8002"]
+        wiki["wiki-service\nhost 8003"]
+        redis["redis service\nhost 6379"]
     end
 
     browser["Browser"]

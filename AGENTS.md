@@ -56,7 +56,7 @@ Never:
 If behavior/architecture/config changes:
 - update relevant docs in @docs/
 - update @PROJECT_CONTEXT.md
-- read @TASKS.md for current work and update
+- read @docs/tasks/ for current work and update
 - after ending the task, make the commit
 
 ---
@@ -79,7 +79,8 @@ Run:
 - understand service responsibility first
 - prefer incremental changes over refactors
 - preserve observability
-- when starting the project, run
-  `DOCKER_CONTEXT=default docker compose down --remove-orphans` before
+- when starting the project, prefer
   `DOCKER_CONTEXT=default docker compose up --build -d`
+- use `DOCKER_CONTEXT=default docker compose down --remove-orphans` only when a
+  clean reset or explicit container cleanup is needed
 - when reading logs/CLI output, check the tail first
