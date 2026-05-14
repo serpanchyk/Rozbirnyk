@@ -64,3 +64,30 @@ def test_agent_service_config_rejects_invalid_bedrock_retry_bounds() -> None:
                 },
             },
         )
+
+
+def test_agent_service_config_rejects_empty_model_id() -> None:
+    """Verify an explicit empty model id fails fast."""
+    with pytest.raises(ValidationError, match="model_id"):
+        AgentServiceConfig(
+            _env_file=None,
+            model={
+                "region_name": "us-east-1",
+                "model_id": "",
+            },
+        )
+
+
+def test_agent_service_config_rejects_langsmith_enabled_without_api_key() -> None:
+    """Verify tracing cannot be enabled with a placeholder or missing key."""
+    with pytest.raises(ValidationError, match="LangSmith"):
+        AgentServiceConfig(
+            _env_file=None,
+            model={"region_name": "us-east-1"},
+            observability={
+                "langsmith": {
+                    "enabled": True,
+                    "api_key": "lsv2_pt_replace_me",
+                }
+            },
+        )

@@ -3,7 +3,7 @@
 from functools import lru_cache
 
 from common.config import BaseServiceConfig
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ServiceSettings(BaseModel):
@@ -40,6 +40,15 @@ class NewsServiceConfig(BaseServiceConfig):
         "populate_by_name": True,
         "env_nested_delimiter": "__",
     }
+
+    @field_validator("tavily_api_key")
+    @classmethod
+    def validate_tavily_api_key(cls, value: str) -> str:
+        """Reject placeholder Tavily values copied from examples."""
+        if value.strip() == "replace-me":
+            msg = "TAVILY_API_KEY must be set to a real value"
+            raise ValueError(msg)
+        return value
 
     @property
     def tavily(self) -> TavilySettings:

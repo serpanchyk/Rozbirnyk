@@ -61,6 +61,9 @@ Notes:
   services without forcing a full teardown first.
 - `TAVILY_API_KEY` is required for Compose startup. If it is missing, Compose
   stops before building the stack instead of starting a broken news service.
+- `agent_service` now fails fast at startup if Bedrock config values are empty,
+  if LangSmith tracing is enabled without a real API key, or if AWS
+  credentials cannot be resolved from the normal provider chain.
 - AWS credentials for `agent_service` are still expected from normal AWS
   environment variables, shared profiles, or IAM roles. Compose passes through
   standard AWS credential variables and mounts `${AWS_SHARED_CREDENTIALS_DIR}`
@@ -122,6 +125,9 @@ aws bedrock list-foundation-models --region us-east-1
 
 If `agent_service` fails at startup or on first model call:
 
+- If startup fails immediately with an AWS credential resolution error, run
+  `aws configure`, set `AWS_PROFILE`, export direct AWS credentials, or use an
+  IAM role before retrying startup.
 - Confirm the AWS identity has Bedrock permissions.
 - Confirm the selected model or inference profile is enabled in the configured
   region.

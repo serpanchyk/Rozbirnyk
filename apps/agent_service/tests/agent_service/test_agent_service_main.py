@@ -2,11 +2,12 @@
 
 import asyncio
 from collections.abc import Sequence
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
 from agent_service.agents.world_builder import WorldBuilder
-from agent_service.main import create_app
+from agent_service.main import _validate_startup_prereqs, create_app
 from agent_service.models import (
     ActiveModelInfo,
     ProviderErrorInfo,
@@ -17,6 +18,7 @@ from agent_service.models import (
     WorldBuilderStatus,
 )
 from agent_service.run_manager import WorldBuilderRunManager
+from agent_service.schema import AgentServiceConfig
 from agent_service.services.llm import ProviderInvocationError
 from agent_service.tools.registry import ToolRegistry
 from fastapi.testclient import TestClient
@@ -313,6 +315,30 @@ def test_run_api_exposes_latest_status() -> None:
     events_response = client.get("/api/v1/world-builder/sessions/scenario-1/events")
     assert events_response.status_code == 200
     assert events_response.json()["events"][0]["event"] == "world_builder.started"
+
+
+def test_validate_startup_prereqs_accepts_resolved_aws_credentials() -> None:
+    """Verify startup preflight accepts a valid credential chain."""
+
+    class FakeCredentials:
+        def get_frozen_credentials(self) -> object:
+            return object()
+
+    config = AgentServiceConfig(_env_file=None, model={"region_name": "us-east-1"})
+    fake_session = SimpleNamespace(get_credentials=lambda: FakeCredentials())
+
+    with patch("agent_service.main.get_session", return_value=fake_session):
+        _validate_startup_prereqs(config)
+
+
+def test_validate_startup_prereqs_rejects_missing_aws_credentials() -> None:
+    """Verify startup preflight fails fast when credentials are unavailable."""
+    config = AgentServiceConfig(_env_file=None, model={"region_name": "us-east-1"})
+    fake_session = SimpleNamespace(get_credentials=lambda: None)
+
+    with patch("agent_service.main.get_session", return_value=fake_session):
+        with pytest.raises(RuntimeError, match="AWS credentials could not be resolved"):
+            _validate_startup_prereqs(config)
 
 
 @pytest.mark.asyncio

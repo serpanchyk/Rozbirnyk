@@ -1,10 +1,13 @@
 """Expose the agent-service API for World Builder orchestration."""
 
 import asyncio
+import os
 from typing import cast
 
 import httpx
 import uvicorn
+from botocore.exceptions import BotoCoreError, ProfileNotFound
+from botocore.session import get_session
 from common.logging import setup_logger
 from fastapi import FastAPI, HTTPException
 
@@ -114,16 +117,58 @@ def _build_run_manager(config: AgentServiceConfig) -> WorldBuilderRunManager:
     )
 
 
-def main() -> None:
+def _validate_aws_credentials() -> None:
+    """Fail fast when AWS credentials cannot be resolved for Bedrock startup."""
+    try:
+        credentials = get_session().get_credentials()
+    except ProfileNotFound as error:
+        profile = os.environ.get("AWS_PROFILE", "<unknown>")
+        msg = (
+            "AWS credentials could not be resolved for agent_service startup. "
+            f"The configured AWS profile '{profile}' was not found."
+        )
+        raise RuntimeError(msg) from error
+    except BotoCoreError as error:
+        msg = (
+            "AWS credentials could not be resolved for agent_service startup. "
+            "Configure aws configure, AWS_PROFILE, direct AWS credential environment "
+            "variables, or an IAM role."
+        )
+        raise RuntimeError(msg) from error
+
+    if credentials is None:
+        msg = (
+            "AWS credentials could not be resolved for agent_service startup. "
+            "Configure aws configure, AWS_PROFILE, direct AWS credential environment "
+            "variables, or an IAM role."
+        )
+        raise RuntimeError(msg)
+
+    try:
+        credentials.get_frozen_credentials()
+    except BotoCoreError as error:
+        msg = "AWS credentials were discovered but could not be loaded for agent_service startup."
+        raise RuntimeError(msg) from error
+
+
+def _validate_startup_prereqs(config: AgentServiceConfig) -> None:
+    """Validate runtime prerequisites that are outside static config parsing."""
+    if config.model.provider == "bedrock":
+        _validate_aws_credentials()
+
+
+def main(config: AgentServiceConfig | None = None) -> None:
     """Run the service with the configured dependencies."""
-    config = get_config()
-    app = create_app(run_manager=_build_run_manager(config))
-    uvicorn.run(app, host="0.0.0.0", port=config.service.port)
+    resolved_config = config or get_config()
+    _validate_startup_prereqs(resolved_config)
+    app = create_app(run_manager=_build_run_manager(resolved_config))
+    uvicorn.run(app, host="0.0.0.0", port=resolved_config.service.port)
 
 
 if __name__ == "__main__":
+    config = get_config()
     logger.info(
         "Initializing Agent Service",
-        extra={"host": "0.0.0.0", "port": get_config().service.port},
+        extra={"host": "0.0.0.0", "port": config.service.port},
     )
-    main()
+    main(config)

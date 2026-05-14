@@ -33,6 +33,20 @@ class LangSmithSettings(BaseModel):
     project: str = Field(default="rozbirnyk", min_length=1)
     endpoint: str | None = Field(default=None)
 
+    @model_validator(mode="after")
+    def validate_enabled_configuration(self) -> Self:
+        """Require a real API key when LangSmith tracing is enabled."""
+        if not self.enabled:
+            return self
+        api_key = (self.api_key or "").strip()
+        if api_key and api_key != "lsv2_pt_replace_me":
+            return self
+        msg = (
+            "observability.langsmith.api_key must be set to a real value when "
+            "LangSmith tracing is enabled"
+        )
+        raise ValueError(msg)
+
 
 class ObservabilitySettings(BaseModel):
     """Observability integrations."""
@@ -68,7 +82,7 @@ class ModelSettings(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     provider: ModelProvider = Field(default="bedrock")
-    model_id: str = Field(default="anthropic.claude-sonnet-4-20250514-v1:0")
+    model_id: str = Field(default="anthropic.claude-sonnet-4-20250514-v1:0", min_length=1)
     region_name: str = Field(min_length=1)
     temperature: float = Field(default=0.2, ge=0.0, le=1.0)
     max_tokens: int = Field(default=4096, gt=0)

@@ -129,6 +129,9 @@ next.
   ports by default; `agent-service`, `news-service`, `wiki-service`, and
   `redis` remain internal-only unless a temporary override is added for
   debugging.
+- 2026-05-14: Startup now fails fast on empty env overrides, placeholder secret
+  values, and missing `agent_service` AWS credentials instead of waiting for a
+  later Bedrock call or container restart loop.
 
 ## Open Questions / Risks
 
