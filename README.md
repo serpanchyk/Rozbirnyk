@@ -161,13 +161,15 @@ The News service requires a Tavily API key exposed as `TAVILY_API_KEY`.
 The Agent service uses AWS Bedrock model settings in
 `apps/agent_service/config.toml`; for Claude 4 models, prefer an inference
 profile ID or ARN such as `us.anthropic.claude-sonnet-4-20250514-v1:0` instead
-of the raw foundation model ID. AWS credentials should come from normal AWS
-environment variables, shared profiles, or runtime IAM roles. In Docker Compose,
-standard AWS credential variables are passed through and `${HOME}/.aws` is
-mounted read-only for `AWS_PROFILE` unless `AWS_SHARED_CREDENTIALS_DIR`
-overrides the source path. Optional LangSmith tracing lives under `observability.langsmith` in
-`apps/agent_service/config.toml` and can be overridden with
-`OBSERVABILITY__LANGSMITH__*` environment variables.
+of the raw foundation model ID. Bedrock request pacing and retry behavior lives
+under `model.runtime`, with conservative defaults for concurrency, minimum delay
+between calls, and exponential-backoff throttling retries. AWS credentials
+should come from normal AWS environment variables, shared profiles, or runtime
+IAM roles. In Docker Compose, standard AWS credential variables are passed
+through and `${HOME}/.aws` is mounted read-only for `AWS_PROFILE` unless
+`AWS_SHARED_CREDENTIALS_DIR` overrides the source path. Optional LangSmith
+tracing lives under `observability.langsmith` in `apps/agent_service/config.toml`
+and can be overridden with `OBSERVABILITY__LANGSMITH__*` environment variables.
 
 ## Local Development
 
@@ -195,7 +197,7 @@ the key is missing.
 Run the complete local stack:
 
 ```bash
-docker compose up --build
+docker compose up --build -d
 ```
 
 Detailed startup instructions for Docker and per-service local development live in
@@ -239,12 +241,12 @@ The Compose stack includes:
 
 | Container | Purpose | Host port |
 | --- | --- | --- |
-| `rozbirnyk-frontend` | UI boundary | `8501` |
-| `rozbirnyk-backend` | Backend boundary | `8000` |
-| `rozbirnyk-agent` | Agent orchestration service | `8001` |
-| `rozbirnyk-news` | Tavily MCP service | `8002` |
-| `rozbirnyk-wiki` | Wiki API and MCP service | `8003` |
-| `rozbirnyk-redis` | Cache store | `6379` |
+| `frontend` | UI boundary | `8501` |
+| `backend` | Backend boundary | `8000` |
+| `agent-service` | Agent orchestration service | `8001` |
+| `news-service` | Tavily MCP service | `8002` |
+| `wiki-service` | Wiki API and MCP service | `8003` |
+| `redis` | Cache store | `6379` |
 
 Wiki session files are stored in the `wiki-data` Docker volume.
 

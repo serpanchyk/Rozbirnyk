@@ -17,6 +17,13 @@ region_name = "us-east-1"
 temperature = 0.2
 max_tokens = 4096
 
+[model.runtime]
+max_concurrency = 1
+min_seconds_between_calls = 1.0
+max_retries = 8
+retry_base_seconds = 1.0
+retry_max_seconds = 30.0
+
 [mcp_servers.wiki_service]
 host = "wiki_service"
 port = 8000

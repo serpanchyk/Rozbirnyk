@@ -7,7 +7,7 @@ import {
   parseSessionEvent,
   startWorldBuilder,
 } from "./api";
-import { isTerminalStatus, mergeEvents, stageLabel } from "./lib";
+import { activeModelLabel, failureMessage, isTerminalStatus, mergeEvents, stageLabel } from "./lib";
 import type { SessionEvent, SessionStatusResponse } from "./types";
 
 const eventTypes = [
@@ -61,6 +61,11 @@ export function App() {
                 ? "failed"
                 : "running",
           stage: parsedEvent.stage,
+          model: parsedEvent.model ?? currentSession.model,
+          error_info:
+            parsedEvent.event === "world_builder.failed"
+              ? parsedEvent.error_info
+              : currentSession.error_info,
           error:
             parsedEvent.event === "world_builder.failed" ? parsedEvent.message : currentSession.error,
         };
@@ -117,11 +122,18 @@ export function App() {
       await startWorldBuilder(createdSession.session_id);
       const initialSession = await fetchSession(createdSession.session_id);
       setSession(initialSession);
+      if (isTerminalStatus(initialSession.status)) {
+        setLoading(false);
+      }
     } catch (submitError) {
       setLoading(false);
       setError(submitError instanceof Error ? submitError.message : String(submitError));
     }
   }
+
+  const sessionFailure = session
+    ? failureMessage(session.error_info, session.error, session.model)
+    : null;
 
   return (
     <main className="app-shell">
@@ -199,6 +211,13 @@ export function App() {
               <span className="badge-value session-id">{session?.session_id ?? "not started"}</span>
             </div>
           </div>
+
+          <p className="status-detail">
+            <span className="status-detail-label">Active model</span>
+            <code>{activeModelLabel(session?.model ?? null)}</code>
+          </p>
+
+          {sessionFailure ? <p className="error-banner">{sessionFailure}</p> : null}
 
           <ol className="event-timeline">
             {events.length === 0 ? (

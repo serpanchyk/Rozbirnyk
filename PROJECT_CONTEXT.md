@@ -104,6 +104,20 @@ next.
   Local ignored `.env` files were synchronized with examples, LangSmith tracing
   was enabled for LangGraph runs, and news-service config now supports the
   documented nested service env overrides alongside flat `TAVILY_API_KEY`.
+- 2026-05-14: Added `docs/problems/` to track known operational issues as
+  individual Markdown records, starting with Bedrock throttling failures
+  during World Builder runs and Docker Compose clean-startup reconciliation
+  failures caused by container stop/name-conflict problems.
+- 2026-05-14: Replaced the single `TASKS.md` file with `docs/tasks/`,
+  organized by status with one Markdown file per tracked task.
+- 2026-05-14: Docker startup guidance now defaults to idempotent
+  `docker compose up --build -d` instead of forcing `down` before each start,
+  and `docker-compose.yaml` no longer pins explicit `container_name` values so
+  Compose can recreate services without hard container-name conflicts.
+- 2026-05-14: Bedrock-backed World Builder calls now run through a shared
+  process-local semaphore and pacing gate, retry throttling with bounded
+  exponential backoff, and surface typed `provider_rate_limited` errors plus
+  active model/profile metadata through agent-service, backend, and frontend.
 
 ## Open Questions / Risks
 
@@ -112,6 +126,9 @@ next.
 
 - Agent-service and backend session/run tracking are currently in-memory only;
   service restarts lose transient progress state.
+- Docker Compose clean restart is not yet fully reliable in the local
+  environment because daemon-level container stop failures can leave stale
+  `Created` containers behind.
 
 ## Next Update Checklist
 

@@ -8,6 +8,8 @@ import pytest
 from agent_service.agents.world_builder import WorldBuilder
 from agent_service.main import create_app
 from agent_service.models import (
+    ActiveModelInfo,
+    ProviderErrorInfo,
     WikiFileSummary,
     WorldBuilderEventType,
     WorldBuilderLimits,
@@ -15,6 +17,7 @@ from agent_service.models import (
     WorldBuilderStatus,
 )
 from agent_service.run_manager import WorldBuilderRunManager
+from agent_service.services.llm import ProviderInvocationError
 from agent_service.tools.registry import ToolRegistry
 from fastapi.testclient import TestClient
 from langchain_core.messages import AIMessage, BaseMessage
@@ -43,6 +46,11 @@ class FakeModel:
     def bind_tools(self, tools: Sequence[BaseTool]) -> FakeBoundModel:
         self.bound_tools = list(tools)
         return self.bound_model
+
+
+RATE_LIMIT_MESSAGE = (
+    "AWS Bedrock is rate-limiting the active model/profile. Retry this run in a moment."
+)
 
 
 def _make_registry() -> ToolRegistry:
@@ -129,6 +137,7 @@ async def test_run_manager_completes_and_summarizes_wiki_files() -> None:
         tool_registry=_make_registry(),
         max_steps=8,
         hard_limits=WorldBuilderLimits(max_actors=4, max_state_files=4),
+        model_info=ActiveModelInfo(provider="aws_bedrock", model_id="test-model"),
         fetch_wiki_files=fetch_wiki_files,
     )
 
@@ -149,6 +158,7 @@ async def test_run_manager_completes_and_summarizes_wiki_files() -> None:
     assert final_status.result_summary is not None
     assert len(final_status.result_summary.state_files) == 1
     assert len(final_status.result_summary.actor_files) == 1
+    assert final_status.model.model_id == "test-model"
     events = manager.list_events_for_session("scenario-1")
     assert events is not None
     assert [event.event for event in events.events] == [
@@ -171,6 +181,7 @@ async def test_run_manager_rejects_duplicate_active_session_runs() -> None:
         tool_registry=_make_registry(),
         max_steps=8,
         hard_limits=WorldBuilderLimits(max_actors=4, max_state_files=4),
+        model_info=ActiveModelInfo(provider="aws_bedrock", model_id="test-model"),
         fetch_wiki_files=fetch_wiki_files,
     )
 
@@ -207,6 +218,7 @@ async def test_run_manager_fails_when_actor_limit_is_exceeded() -> None:
         tool_registry=_make_registry(),
         max_steps=8,
         hard_limits=WorldBuilderLimits(max_actors=1, max_state_files=4),
+        model_info=ActiveModelInfo(provider="aws_bedrock", model_id="test-model"),
         fetch_wiki_files=fetch_wiki_files,
     )
 
@@ -239,6 +251,7 @@ async def test_run_manager_attaches_trace_metadata_when_enabled() -> None:
         tool_registry=_make_registry(),
         max_steps=8,
         hard_limits=WorldBuilderLimits(max_actors=4, max_state_files=4),
+        model_info=ActiveModelInfo(provider="aws_bedrock", model_id="test-model"),
         fetch_wiki_files=fetch_wiki_files,
         tracing_enabled=True,
     )
@@ -281,6 +294,7 @@ def test_run_api_exposes_latest_status() -> None:
         tool_registry=_make_registry(),
         max_steps=8,
         hard_limits=WorldBuilderLimits(max_actors=4, max_state_files=4),
+        model_info=ActiveModelInfo(provider="aws_bedrock", model_id="test-model"),
         fetch_wiki_files=fetch_wiki_files,
     )
     client = TestClient(create_app(run_manager=manager))
@@ -295,6 +309,56 @@ def test_run_api_exposes_latest_status() -> None:
     status_response = client.get(f"/api/v1/world-builder/runs/{payload['run_id']}")
     assert status_response.status_code == 200
     assert status_response.json()["session_id"] == "scenario-1"
+    assert status_response.json()["model"]["model_id"] == "test-model"
     events_response = client.get("/api/v1/world-builder/sessions/scenario-1/events")
     assert events_response.status_code == 200
     assert events_response.json()["events"][0]["event"] == "world_builder.started"
+
+
+@pytest.mark.asyncio
+async def test_run_manager_persists_structured_provider_errors() -> None:
+    """Verify provider failures are preserved in run status and failure events."""
+
+    async def fetch_wiki_files(_: str) -> list[WikiFileSummary]:
+        return []
+
+    class FailingGraph:
+        async def ainvoke(self, state: object, config: object = None) -> dict[str, list[AIMessage]]:
+            raise ProviderInvocationError(
+                error_code="provider_rate_limited",
+                message=RATE_LIMIT_MESSAGE,
+                retryable=True,
+                provider="aws_bedrock",
+                details={"model_id": "test-model"},
+            )
+
+    manager = WorldBuilderRunManager(
+        model=FakeModel([AIMessage(content="done")]),
+        tool_registry=_make_registry(),
+        max_steps=8,
+        hard_limits=WorldBuilderLimits(max_actors=4, max_state_files=4),
+        model_info=ActiveModelInfo(provider="aws_bedrock", model_id="test-model"),
+        fetch_wiki_files=fetch_wiki_files,
+    )
+
+    def fake_create_graph(self: WorldBuilder) -> FailingGraph:
+        return FailingGraph()
+
+    with patch.object(WorldBuilder, "create_graph", fake_create_graph):
+        response = await manager.start_run(
+            WorldBuilderRunRequest(session_id="scenario-1", scenario="Brazil joins OPEC")
+        )
+        terminal_status = await _wait_for_terminal_status(manager, response.run_id)
+
+    final_status = manager.get_status(response.run_id)
+    assert terminal_status == WorldBuilderStatus.FAILED
+    assert final_status.error_info == ProviderErrorInfo(
+        error_code="provider_rate_limited",
+        message=RATE_LIMIT_MESSAGE,
+        retryable=True,
+        provider="aws_bedrock",
+        details={"model_id": "test-model"},
+    )
+    events = manager.list_events_for_session("scenario-1")
+    assert events is not None
+    assert events.events[-1].error_info == final_status.error_info

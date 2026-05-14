@@ -15,9 +15,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from backend.models import (
+    ActiveModelInfo,
     BuilderStage,
     CreateSessionRequest,
     CreateSessionResponse,
+    ProviderErrorInfo,
     SessionEvent,
     SessionEventsResponse,
     SessionLimits,
@@ -109,6 +111,8 @@ class SessionRecord:
     run_id: str | None = None
     effective_limits: SessionLimits | None = None
     error: str | None = None
+    error_info: ProviderErrorInfo | None = None
+    model: ActiveModelInfo | None = None
 
 
 class SessionStore:
@@ -242,6 +246,18 @@ def create_app(
                 record.effective_limits = SessionLimits.model_validate(limits_payload)
             error_message = payload.get("error")
             record.error = str(error_message) if error_message else None
+            error_info_payload = payload.get("error_info")
+            record.error_info = (
+                ProviderErrorInfo.model_validate(error_info_payload)
+                if isinstance(error_info_payload, dict)
+                else None
+            )
+            model_payload = payload.get("model")
+            record.model = (
+                ActiveModelInfo.model_validate(model_payload)
+                if isinstance(model_payload, dict)
+                else None
+            )
             if record.status == SessionStatus.COMPLETED:
                 files = await app.state.wiki_client.list_files(session_id)
                 state_files = [file for file in files if file.kind == "state"]
@@ -256,6 +272,8 @@ def create_app(
             requested_limits=record.requested_limits,
             effective_limits=record.effective_limits,
             error=record.error,
+            error_info=record.error_info,
+            model=record.model,
             state_files=state_files,
             actor_files=actor_files,
         )
@@ -289,6 +307,7 @@ def create_app(
                         event="world_builder.failed",
                         stage=BuilderStage.FAILED,
                         message=str(error),
+                        model=record.model,
                     )
                     yield _format_sse_event(error_event)
                     return

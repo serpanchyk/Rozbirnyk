@@ -28,6 +28,20 @@ export interface WikiFileSummary {
   kind: "state" | "actor" | "timeline" | "unknown";
 }
 
+export interface ProviderErrorInfo {
+  error_code: string;
+  message: string;
+  retryable: boolean;
+  provider: string;
+  details: Record<string, unknown> | null;
+}
+
+export interface ActiveModelInfo {
+  provider: string;
+  model_id: string;
+  display_name: string | null;
+}
+
 export interface SessionStatusResponse {
   session_id: string;
   scenario: string;
@@ -37,6 +51,8 @@ export interface SessionStatusResponse {
   requested_limits: SessionLimits;
   effective_limits: SessionLimits | null;
   error: string | null;
+  error_info: ProviderErrorInfo | null;
+  model: ActiveModelInfo | null;
   state_files: WikiFileSummary[];
   actor_files: WikiFileSummary[];
 }
@@ -49,6 +65,8 @@ export interface SessionEvent {
   stage: BuilderStage;
   message: string;
   file: WikiFileSummary | null;
+  error_info: ProviderErrorInfo | null;
+  model: ActiveModelInfo | null;
   created_at: string;
 }
 

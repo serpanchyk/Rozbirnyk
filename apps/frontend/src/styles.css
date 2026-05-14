@@ -218,6 +218,21 @@ button {
   margin-bottom: 18px;
 }
 
+.status-detail {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 18px;
+  color: var(--text-soft);
+}
+
+.status-detail-label {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+}
+
 .status-badges > div {
   padding: 14px;
   border-radius: 18px;
@@ -334,7 +349,8 @@ button {
   }
 
   .timeline-meta,
-  .file-title-row {
+  .file-title-row,
+  .status-detail {
     flex-direction: column;
     align-items: flex-start;
   }

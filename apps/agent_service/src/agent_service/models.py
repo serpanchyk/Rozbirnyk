@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime
 from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -43,6 +44,26 @@ class WorldBuilderLimits(BaseModel):
     model_config = ConfigDict(extra="forbid")
     max_actors: int = Field(gt=0)
     max_state_files: int = Field(gt=0)
+
+
+class ProviderErrorInfo(BaseModel):
+    """Carry a typed provider failure through the API."""
+
+    model_config = ConfigDict(extra="forbid")
+    error_code: str = Field(min_length=1)
+    message: str = Field(min_length=1)
+    retryable: bool
+    provider: str = Field(min_length=1)
+    details: dict[str, Any] | None = None
+
+
+class ActiveModelInfo(BaseModel):
+    """Describe the provider/model target active for a run."""
+
+    model_config = ConfigDict(extra="forbid")
+    provider: str = Field(min_length=1)
+    model_id: str = Field(min_length=1)
+    display_name: str | None = None
 
 
 class WorldBuilderRunRequest(BaseModel):
@@ -94,6 +115,8 @@ class WorldBuilderProgressEvent(BaseModel):
     stage: WorldBuilderStage
     message: str
     file: WikiFileSummary | None = None
+    error_info: ProviderErrorInfo | None = None
+    model: ActiveModelInfo | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
@@ -117,4 +140,6 @@ class WorldBuilderRunStatusResponse(BaseModel):
     effective_limits: WorldBuilderLimits
     result_summary: WorldBuilderRunSummary | None = None
     error: str | None = None
+    error_info: ProviderErrorInfo | None = None
+    model: ActiveModelInfo
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

@@ -60,9 +60,9 @@ Notes:
 - Docker Compose auto-loads the repo-root `.env` for variable substitution, but
   only the Docker-specific settings declared in `docker-compose.yaml` are
   passed into containers.
-- Local Docker startup should first remove stale Compose containers and
-  orphaned containers. This does not remove named volumes unless you explicitly
-  add `-v`.
+- The default Docker startup path is idempotent: use `docker compose up --build
+  -d` to build missing images, create missing containers, and recreate changed
+  services without forcing a full teardown first.
 - `TAVILY_API_KEY` is required for Compose startup. If it is missing, Compose
   stops before building the stack instead of starting a broken news service.
 - AWS credentials for `agent_service` are still expected from normal AWS
@@ -75,7 +75,8 @@ Notes:
   traced from `agent_service`.
 - Service-local `.env.example` files remain available for direct per-service
   local runs; they are not required for Docker Compose startup.
-- For direct local service runs, the Python services read `.env` from their own working directory through `BaseServiceConfig`.
+- For direct local service runs, the Python services read `.env` from their own
+  working directory through `BaseServiceConfig`.
 
 ## Configure Amazon Bedrock Access
 
@@ -96,10 +97,25 @@ Region handling:
   `apps/agent_service/.env` or in the shell.
 - `MODEL__MODEL_ID` may be a raw foundation model ID, an inference profile ID,
   or an inference profile ARN. For Claude 4 local development, prefer an
-  inference profile ID or ARN such as
+  cross-region inference profile ID or ARN such as
   `us.anthropic.claude-sonnet-4-20250514-v1:0`.
 - Keep the configured model/inference profile and region aligned with a region
   where that resource is enabled in your AWS account.
+
+Bedrock runtime pacing and retry controls:
+- `MODEL__RUNTIME__MAX_CONCURRENCY=1`
+- `MODEL__RUNTIME__MIN_SECONDS_BETWEEN_CALLS=1.0`
+- `MODEL__RUNTIME__MAX_RETRIES=8`
+- `MODEL__RUNTIME__RETRY_BASE_SECONDS=1.0`
+- `MODEL__RUNTIME__RETRY_MAX_SECONDS=30.0`
+
+Recommended starting point:
+- Keep `MODEL__MODEL_ID` on a cross-region inference profile for Docker and
+  production-like runs.
+- Start with concurrency `1` and a one-second minimum gap between Bedrock
+  calls.
+- Let the built-in retry path absorb transient `ThrottlingException` responses
+  before the run is marked failed.
 
 Minimal local verification:
 
@@ -117,6 +133,10 @@ If `agent_service` fails at startup or on first model call:
 - If Bedrock reports that on-demand throughput is unsupported, switch
   `MODEL__MODEL_ID` to an inference profile ID or ARN instead of the raw
   foundation model ID.
+- If World Builder still fails with Bedrock throttling, keep the inference
+  profile target and lower request pressure further with
+  `MODEL__RUNTIME__MAX_CONCURRENCY=1` and a higher
+  `MODEL__RUNTIME__MIN_SECONDS_BETWEEN_CALLS`.
 - If using Docker Compose with a shared credentials directory outside
   `${HOME}/.aws`, set `AWS_SHARED_CREDENTIALS_DIR=/path/to/.aws` in `.env`.
 - If using Docker Compose with temporary credentials, export
@@ -151,11 +171,9 @@ Notes:
 
 ## Run The Full Stack With Docker
 
-From the repo root, always clear stale Compose containers before building and
-starting the stack:
+From the repo root, build and start the stack with:
 
 ```bash
-DOCKER_CONTEXT=default docker compose down --remove-orphans
 DOCKER_CONTEXT=default docker compose up --build -d
 ```
 
@@ -173,17 +191,29 @@ Inspect logs with:
 docker compose logs -f backend
 ```
 
-If you intentionally do not need a clean recreate after the first build:
-
-```bash
-DOCKER_CONTEXT=default docker compose up -d
-```
-
 Useful checks:
 
 ```bash
 docker compose ps
 docker compose logs -f
+```
+
+If you want to stop the running stack but keep containers and named volumes:
+
+```bash
+DOCKER_CONTEXT=default docker compose stop
+```
+
+If you want to remove the stack containers and networks for a fresh recreate:
+
+```bash
+DOCKER_CONTEXT=default docker compose down --remove-orphans
+```
+
+If you also want to remove named volumes such as the persisted wiki data:
+
+```bash
+DOCKER_CONTEXT=default docker compose down --remove-orphans --volumes
 ```
 
 If Docker is not running, startup fails with an error like:
@@ -205,21 +235,29 @@ docker context use default
 or run Compose with the system daemon for only that command:
 
 ```bash
-DOCKER_CONTEXT=default docker compose down --remove-orphans
 DOCKER_CONTEXT=default docker compose up --build -d
+```
+
+If `docker compose up --build -d` reports a container recreation problem, first
+inspect the stack:
+
+```bash
+docker compose ps
+docker compose logs --tail 100
 ```
 
 If Docker reports `permission denied` while stopping or recreating a container,
-the daemon may have a stuck container process. Check the current stack with
-`docker compose ps`. If containers remain healthy, the app is still usable; to
-recover clean recreate behavior, restart Docker from a privileged shell and run
-Compose again:
+the daemon may have a stuck container process. Restart Docker from a privileged
+shell and then rerun the normal startup command:
 
 ```bash
 sudo systemctl restart docker
-DOCKER_CONTEXT=default docker compose down --remove-orphans
 DOCKER_CONTEXT=default docker compose up --build -d
 ```
+
+The Compose file intentionally does not set fixed `container_name` values. That
+keeps startup and recreates more reliable by letting Compose manage container
+replacement without hard name conflicts.
 
 ## Run Services Locally
 

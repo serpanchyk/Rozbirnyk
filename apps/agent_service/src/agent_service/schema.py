@@ -44,6 +44,25 @@ class ObservabilitySettings(BaseModel):
 type ModelProvider = Literal["bedrock"]
 
 
+class ModelRuntimeSettings(BaseModel):
+    """Configure provider request pacing and retries."""
+
+    model_config = ConfigDict(extra="forbid")
+    max_concurrency: int = Field(default=1, gt=0)
+    min_seconds_between_calls: float = Field(default=1.0, ge=0.0)
+    max_retries: int = Field(default=8, ge=0)
+    retry_base_seconds: float = Field(default=1.0, gt=0.0)
+    retry_max_seconds: float = Field(default=30.0, gt=0.0)
+
+    @model_validator(mode="after")
+    def validate_retry_bounds(self) -> Self:
+        """Ensure retry caps are internally consistent."""
+        if self.retry_max_seconds < self.retry_base_seconds:
+            msg = "retry_max_seconds must be greater than or equal to retry_base_seconds"
+            raise ValueError(msg)
+        return self
+
+
 class ModelSettings(BaseModel):
     """Configure the chat model used by agent graphs."""
 
@@ -53,6 +72,7 @@ class ModelSettings(BaseModel):
     region_name: str = Field(min_length=1)
     temperature: float = Field(default=0.2, ge=0.0, le=1.0)
     max_tokens: int = Field(default=4096, gt=0)
+    runtime: ModelRuntimeSettings = Field(default_factory=ModelRuntimeSettings)
 
 
 class MCPServerSettings(BaseModel):

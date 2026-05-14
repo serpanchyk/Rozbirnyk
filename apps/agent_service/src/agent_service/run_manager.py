@@ -11,6 +11,8 @@ from langchain_core.runnables import RunnableConfig
 
 from agent_service.agents.world_builder import WorldBuilder
 from agent_service.models import (
+    ActiveModelInfo,
+    ProviderErrorInfo,
     WikiFileSummary,
     WorldBuilderEventsResponse,
     WorldBuilderEventType,
@@ -23,6 +25,7 @@ from agent_service.models import (
     WorldBuilderStage,
     WorldBuilderStatus,
 )
+from agent_service.services.llm import ProviderInvocationError
 from agent_service.tools.registry import ToolRegistry
 
 type FileFetcher = Callable[[str], Awaitable[list[WikiFileSummary]]]
@@ -36,10 +39,12 @@ class RunRecord:
     session_id: str
     scenario: str
     effective_limits: WorldBuilderLimits
+    model: ActiveModelInfo
     status: WorldBuilderStatus = WorldBuilderStatus.QUEUED
     stage: WorldBuilderStage = WorldBuilderStage.QUEUED
     result_summary: WorldBuilderRunSummary | None = None
     error: str | None = None
+    error_info: ProviderErrorInfo | None = None
     events: list[WorldBuilderProgressEvent] = field(default_factory=list)
     next_sequence: int = 1
     updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
@@ -55,6 +60,8 @@ class RunRecord:
             effective_limits=self.effective_limits,
             result_summary=self.result_summary,
             error=self.error,
+            error_info=self.error_info,
+            model=self.model,
             updated_at=self.updated_at,
         )
 
@@ -69,6 +76,7 @@ class WorldBuilderRunManager:
         tool_registry: ToolRegistry,
         max_steps: int,
         hard_limits: WorldBuilderLimits,
+        model_info: ActiveModelInfo,
         fetch_wiki_files: FileFetcher,
         tracing_enabled: bool = False,
     ) -> None:
@@ -77,6 +85,7 @@ class WorldBuilderRunManager:
         self._tool_registry = tool_registry
         self._max_steps = max_steps
         self._hard_limits = hard_limits
+        self._model_info = model_info
         self._fetch_wiki_files = fetch_wiki_files
         self._tracing_enabled = tracing_enabled
         self._runs: dict[str, RunRecord] = {}
@@ -97,6 +106,7 @@ class WorldBuilderRunManager:
             session_id=request.session_id,
             scenario=request.scenario,
             effective_limits=self._effective_limits(request),
+            model=self._model_info,
         )
         self._runs[run_id] = record
         self._active_run_ids_by_session[request.session_id] = run_id
@@ -204,6 +214,22 @@ class WorldBuilderRunManager:
                 stage=WorldBuilderStage.COMPLETED,
                 message=summary.completion_message or "World Builder completed successfully.",
             )
+        except ProviderInvocationError as error:
+            error_info = error.to_error_info()
+            self._update(
+                record,
+                status=WorldBuilderStatus.FAILED,
+                stage=WorldBuilderStage.FAILED,
+                error=error.message,
+                error_info=error_info,
+            )
+            self._emit_event(
+                record,
+                event=WorldBuilderEventType.FAILED,
+                stage=WorldBuilderStage.FAILED,
+                message=error.message,
+                error_info=error_info,
+            )
         except Exception as error:
             self._update(
                 record,
@@ -281,6 +307,7 @@ class WorldBuilderRunManager:
         stage: WorldBuilderStage,
         message: str,
         file: WikiFileSummary | None = None,
+        error_info: ProviderErrorInfo | None = None,
     ) -> None:
         """Append one progress event to the run record."""
         progress_event = WorldBuilderProgressEvent(
@@ -291,6 +318,8 @@ class WorldBuilderRunManager:
             stage=stage,
             message=message,
             file=file,
+            error_info=error_info,
+            model=record.model,
         )
         record.events.append(progress_event)
         record.next_sequence += 1
@@ -318,6 +347,7 @@ class WorldBuilderRunManager:
         stage: WorldBuilderStage | None = None,
         result_summary: WorldBuilderRunSummary | None = None,
         error: str | None = None,
+        error_info: ProviderErrorInfo | None = None,
     ) -> None:
         if status is not None:
             record.status = status
@@ -327,4 +357,6 @@ class WorldBuilderRunManager:
             record.result_summary = result_summary
         if error is not None:
             record.error = error
+        if error_info is not None:
+            record.error_info = error_info
         record.updated_at = datetime.now(UTC)
