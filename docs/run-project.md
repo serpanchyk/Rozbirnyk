@@ -177,7 +177,7 @@ Notes:
 From the repo root, build and start the stack with:
 
 ```bash
-DOCKER_CONTEXT=default docker compose up --build -d
+docker compose up --build -d
 ```
 
 Main URLs after startup:
@@ -204,19 +204,19 @@ docker compose logs -f
 If you want to stop the running stack but keep containers and named volumes:
 
 ```bash
-DOCKER_CONTEXT=default docker compose stop
+docker compose stop
 ```
 
 If you want to remove the stack containers and networks for a fresh recreate:
 
 ```bash
-DOCKER_CONTEXT=default docker compose down --remove-orphans
+docker compose down --remove-orphans
 ```
 
 If you also want to remove named volumes such as the persisted wiki data:
 
 ```bash
-DOCKER_CONTEXT=default docker compose down --remove-orphans --volumes
+docker compose down --remove-orphans --volumes
 ```
 
 If Docker is not running, startup fails with an error like:
@@ -227,19 +227,6 @@ Cannot connect to the Docker daemon
 
 Start Docker Desktop or the system Docker service, then rerun
 `docker compose up --build`.
-
-If the system Docker service is running but the active Docker context points to
-an inactive Docker Desktop socket, either switch contexts:
-
-```bash
-docker context use default
-```
-
-or run Compose with the system daemon for only that command:
-
-```bash
-DOCKER_CONTEXT=default docker compose up --build -d
-```
 
 If `docker compose up --build -d` reports a container recreation problem, first
 inspect the stack:
@@ -255,7 +242,7 @@ shell and then rerun the normal startup command:
 
 ```bash
 sudo systemctl restart docker
-DOCKER_CONTEXT=default docker compose up --build -d
+docker compose up --build -d
 ```
 
 The Compose file intentionally does not set fixed `container_name` values. That
