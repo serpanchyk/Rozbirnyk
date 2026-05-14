@@ -47,9 +47,6 @@ The checked-in `.env.example` also defines the default host ports consumed by
 
 ```bash
 BACKEND_PORT=8000
-AGENT_SERVICE_PORT=8001
-NEWS_SERVICE_PORT=8002
-WIKI_SERVICE_PORT=8003
 FRONTEND_PORT=8501
 VITE_BACKEND_URL=http://localhost:8000
 ```
@@ -183,10 +180,8 @@ Main URLs after startup:
 
 - Frontend: `http://localhost:8501`
 - Backend: `http://localhost:8000`
-- Agent service: `http://localhost:8001`
-- News service: `http://localhost:8002`
-- Wiki service: `http://localhost:8003`
-- Redis is internal to the Compose network and is not published on a host port.
+- `agent-service`, `news-service`, `wiki-service`, and `redis` are internal to
+  the Compose network and are not published on host ports in the default setup.
 
 Inspect logs with:
 

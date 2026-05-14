@@ -125,6 +125,10 @@ next.
 - 2026-05-14: Docker Compose no longer publishes Redis on a host port because
   the stack only needs Redis on the internal Compose network, and host binding
   caused avoidable local port conflicts during startup.
+- 2026-05-14: Docker Compose now publishes only `frontend` and `backend` host
+  ports by default; `agent-service`, `news-service`, `wiki-service`, and
+  `redis` remain internal-only unless a temporary override is added for
+  debugging.
 
 ## Open Questions / Risks
 
