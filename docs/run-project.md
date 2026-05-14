@@ -51,7 +51,6 @@ AGENT_SERVICE_PORT=8001
 NEWS_SERVICE_PORT=8002
 WIKI_SERVICE_PORT=8003
 FRONTEND_PORT=8501
-REDIS_PORT=6379
 VITE_BACKEND_URL=http://localhost:8000
 ```
 
@@ -187,6 +186,7 @@ Main URLs after startup:
 - Agent service: `http://localhost:8001`
 - News service: `http://localhost:8002`
 - Wiki service: `http://localhost:8003`
+- Redis is internal to the Compose network and is not published on a host port.
 
 Inspect logs with:
 

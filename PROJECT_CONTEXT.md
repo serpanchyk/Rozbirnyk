@@ -122,6 +122,9 @@ next.
   `agent-service`, Bedrock pacing defaults were raised to a more conservative
   baseline, and `agent-service` logs now record the active Bedrock runtime
   settings plus structured provider-throttling failures.
+- 2026-05-14: Docker Compose no longer publishes Redis on a host port because
+  the stack only needs Redis on the internal Compose network, and host binding
+  caused avoidable local port conflicts during startup.
 
 ## Open Questions / Risks
 
