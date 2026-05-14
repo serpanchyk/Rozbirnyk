@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from uuid import uuid4
 
+from common.logging import setup_logger
 from langchain_core.messages import BaseMessage
 from langchain_core.runnables import RunnableConfig
 
@@ -29,6 +30,8 @@ from agent_service.services.llm import ProviderInvocationError
 from agent_service.tools.registry import ToolRegistry
 
 type FileFetcher = Callable[[str], Awaitable[list[WikiFileSummary]]]
+
+logger = setup_logger("agent_service.run_manager")
 
 
 @dataclass(slots=True)
@@ -110,6 +113,17 @@ class WorldBuilderRunManager:
         )
         self._runs[run_id] = record
         self._active_run_ids_by_session[request.session_id] = run_id
+        logger.info(
+            "World Builder run created.",
+            extra={
+                "run_id": run_id,
+                "session_id": request.session_id,
+                "model_provider": record.model.provider,
+                "model_id": record.model.model_id,
+                "max_actors": record.effective_limits.max_actors,
+                "max_state_files": record.effective_limits.max_state_files,
+            },
+        )
         self._emit_event(
             record,
             event=WorldBuilderEventType.STARTED,
@@ -208,6 +222,15 @@ class WorldBuilderRunManager:
                 stage=WorldBuilderStage.COMPLETED,
                 result_summary=summary,
             )
+            logger.info(
+                "World Builder run completed.",
+                extra={
+                    "run_id": record.run_id,
+                    "session_id": record.session_id,
+                    "state_file_count": len(summary.state_files),
+                    "actor_file_count": len(summary.actor_files),
+                },
+            )
             self._emit_event(
                 record,
                 event=WorldBuilderEventType.COMPLETED,
@@ -223,6 +246,17 @@ class WorldBuilderRunManager:
                 error=error.message,
                 error_info=error_info,
             )
+            logger.error(
+                "World Builder run failed with provider error.",
+                extra={
+                    "run_id": record.run_id,
+                    "session_id": record.session_id,
+                    "provider": error.provider,
+                    "error_code": error.error_code,
+                    "retryable": error.retryable,
+                    "details": error.details,
+                },
+            )
             self._emit_event(
                 record,
                 event=WorldBuilderEventType.FAILED,
@@ -236,6 +270,13 @@ class WorldBuilderRunManager:
                 status=WorldBuilderStatus.FAILED,
                 stage=WorldBuilderStage.FAILED,
                 error=str(error),
+            )
+            logger.exception(
+                "World Builder run failed with unexpected error.",
+                extra={
+                    "run_id": record.run_id,
+                    "session_id": record.session_id,
+                },
             )
             self._emit_event(
                 record,

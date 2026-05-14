@@ -118,6 +118,10 @@ next.
   process-local semaphore and pacing gate, retry throttling with bounded
   exponential backoff, and surface typed `provider_rate_limited` errors plus
   active model/profile metadata through agent-service, backend, and frontend.
+- 2026-05-14: Docker Compose now forwards repo-root `MODEL__...` overrides into
+  `agent-service`, Bedrock pacing defaults were raised to a more conservative
+  baseline, and `agent-service` logs now record the active Bedrock runtime
+  settings plus structured provider-throttling failures.
 
 ## Open Questions / Risks
 

@@ -123,6 +123,17 @@ class RetryingBoundModel(AsyncMessageModel):
                 if throttling is None:
                     raise
                 if attempt >= self._runtime.max_retries:
+                    logger.error(
+                        "Bedrock throttling retries exhausted.",
+                        extra={
+                            "provider": self._provider,
+                            "model_id": self._model_id,
+                            "attempts": attempt + 1,
+                            "max_retries": self._runtime.max_retries,
+                            "throttling_error_code": throttling.error_code,
+                            "provider_message": throttling.provider_message,
+                        },
+                    )
                     raise ProviderInvocationError(
                         error_code="provider_rate_limited",
                         message=(
@@ -260,6 +271,19 @@ class LLMService:
     def _create_model(self, settings: ModelSettings) -> ToolBindableModel:
         """Create a provider-specific model behind the service boundary."""
         if settings.provider == "bedrock":
+            logger.info(
+                "Initializing AWS Bedrock model runtime.",
+                extra={
+                    "provider": "aws_bedrock",
+                    "model_id": settings.model_id,
+                    "region_name": settings.region_name,
+                    "max_concurrency": settings.runtime.max_concurrency,
+                    "min_seconds_between_calls": settings.runtime.min_seconds_between_calls,
+                    "max_retries": settings.runtime.max_retries,
+                    "retry_base_seconds": settings.runtime.retry_base_seconds,
+                    "retry_max_seconds": settings.runtime.retry_max_seconds,
+                },
+            )
             model = cast(
                 ToolBindableModel,
                 ChatBedrockConverse(

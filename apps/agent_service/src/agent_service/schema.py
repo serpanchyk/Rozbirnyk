@@ -49,10 +49,10 @@ class ModelRuntimeSettings(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     max_concurrency: int = Field(default=1, gt=0)
-    min_seconds_between_calls: float = Field(default=1.0, ge=0.0)
-    max_retries: int = Field(default=8, ge=0)
+    min_seconds_between_calls: float = Field(default=2.0, ge=0.0)
+    max_retries: int = Field(default=10, ge=0)
     retry_base_seconds: float = Field(default=1.0, gt=0.0)
-    retry_max_seconds: float = Field(default=30.0, gt=0.0)
+    retry_max_seconds: float = Field(default=60.0, gt=0.0)
 
     @model_validator(mode="after")
     def validate_retry_bounds(self) -> Self:

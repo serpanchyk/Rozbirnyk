@@ -34,3 +34,10 @@ Resolved on 2026-05-14.
   optimization work only.
 - The request gate is process-local to `agent_service`; no distributed
   cross-container coordination was added in this version.
+- Docker Compose now forwards repo-root `MODEL__...` overrides into
+  `agent-service`, so Bedrock pacing changes for container runs belong in the
+  repo-root `.env`, not the service-local `.env`.
+- Local defaults were raised to a more conservative baseline of a two-second
+  minimum gap, ten retries, and a sixty-second maximum backoff, and
+  `agent_service` now logs both the active Bedrock runtime settings and
+  exhausted provider-throttling failures explicitly.

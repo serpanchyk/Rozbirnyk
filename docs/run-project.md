@@ -104,15 +104,15 @@ Region handling:
 
 Bedrock runtime pacing and retry controls:
 - `MODEL__RUNTIME__MAX_CONCURRENCY=1`
-- `MODEL__RUNTIME__MIN_SECONDS_BETWEEN_CALLS=1.0`
-- `MODEL__RUNTIME__MAX_RETRIES=8`
+- `MODEL__RUNTIME__MIN_SECONDS_BETWEEN_CALLS=2.0`
+- `MODEL__RUNTIME__MAX_RETRIES=10`
 - `MODEL__RUNTIME__RETRY_BASE_SECONDS=1.0`
-- `MODEL__RUNTIME__RETRY_MAX_SECONDS=30.0`
+- `MODEL__RUNTIME__RETRY_MAX_SECONDS=60.0`
 
 Recommended starting point:
 - Keep `MODEL__MODEL_ID` on a cross-region inference profile for Docker and
   production-like runs.
-- Start with concurrency `1` and a one-second minimum gap between Bedrock
+- Start with concurrency `1` and a two-second minimum gap between Bedrock
   calls.
 - Let the built-in retry path absorb transient `ThrottlingException` responses
   before the run is marked failed.
@@ -135,8 +135,11 @@ If `agent_service` fails at startup or on first model call:
   foundation model ID.
 - If World Builder still fails with Bedrock throttling, keep the inference
   profile target and lower request pressure further with
-  `MODEL__RUNTIME__MAX_CONCURRENCY=1` and a higher
+  `MODEL__RUNTIME__MAX_CONCURRENCY=1` and an even higher
   `MODEL__RUNTIME__MIN_SECONDS_BETWEEN_CALLS`.
+- Docker Compose forwards repo-root `MODEL__...` variables into
+  `agent-service`; use the repo-root `.env` instead of service-local `.env`
+  files when tuning Bedrock pacing for container runs.
 - If using Docker Compose with a shared credentials directory outside
   `${HOME}/.aws`, set `AWS_SHARED_CREDENTIALS_DIR=/path/to/.aws` in `.env`.
 - If using Docker Compose with temporary credentials, export

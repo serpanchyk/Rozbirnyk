@@ -10,6 +10,13 @@ exception text.
 
 Done.
 
+Follow-up on 2026-05-14:
+- Forwarded repo-root `MODEL__...` variables through Docker Compose so
+  containerized `agent_service` runs can actually honor Bedrock pacing and
+  model overrides from the canonical `.env`.
+- Raised the default Bedrock pacing baseline and added explicit structured
+  logging for runtime initialization and exhausted throttling retries.
+
 ## Acceptance Criteria
 
 - `agent_service` uses inference-profile-first Bedrock defaults plus

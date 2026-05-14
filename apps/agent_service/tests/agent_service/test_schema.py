@@ -46,7 +46,9 @@ def test_agent_service_config_defaults_langsmith_tracing_to_disabled() -> None:
     assert config.observability.langsmith.enabled is False
     assert config.observability.langsmith.project == "rozbirnyk"
     assert config.model.runtime.max_concurrency == 1
-    assert config.model.runtime.min_seconds_between_calls == 1.0
+    assert config.model.runtime.min_seconds_between_calls == 2.0
+    assert config.model.runtime.max_retries == 10
+    assert config.model.runtime.retry_max_seconds == 60.0
 
 
 def test_agent_service_config_rejects_invalid_bedrock_retry_bounds() -> None:
