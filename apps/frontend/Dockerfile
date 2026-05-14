@@ -4,7 +4,7 @@ FROM node:20-bookworm-slim AS builder
 WORKDIR /app/apps/frontend
 
 COPY apps/frontend/package.json apps/frontend/package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 COPY apps/frontend/ ./
 

@@ -6,7 +6,13 @@ WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 
-RUN --mount=type=bind,source=.,target=/app \
+COPY pyproject.toml uv.lock ./
+COPY packages/common/pyproject.toml ./packages/common/pyproject.toml
+COPY packages/common/src ./packages/common/src
+COPY mcp_servers/news_service/pyproject.toml ./mcp_servers/news_service/pyproject.toml
+COPY mcp_servers/news_service/src ./mcp_servers/news_service/src
+
+RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-editable --package rozbirnyk_news_service
 
 # --- Stage 2: Runtime ---

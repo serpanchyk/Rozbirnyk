@@ -132,6 +132,10 @@ next.
 - 2026-05-14: Startup now fails fast on empty env overrides, placeholder secret
   values, and missing `agent_service` AWS credentials instead of waiting for a
   later Bedrock call or container restart loop.
+- 2026-05-14: Docker build performance was improved by narrowing each Python
+  image's dependency-install inputs to only the relevant workspace files and
+  adding reusable `uv`/`npm` cache mounts, so unrelated repo changes should no
+  longer force all service dependencies to reinstall.
 
 ## Open Questions / Risks
 

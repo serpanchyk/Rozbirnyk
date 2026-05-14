@@ -56,6 +56,11 @@ Notes:
 - Docker Compose auto-loads the repo-root `.env` for variable substitution, but
   only the Docker-specific settings declared in `docker-compose.yaml` are
   passed into containers.
+- Python image builds now copy only the workspace metadata and service-local
+  source trees each image actually needs before running `uv sync`. Unrelated
+  repo edits should no longer invalidate every Python dependency layer.
+- Docker builds also use cache mounts for `uv` and `npm`, so repeat builds can
+  reuse downloaded packages instead of fetching them again.
 - The default Docker startup path is idempotent: use `docker compose up --build
   -d` to build missing images, create missing containers, and recreate changed
   services without forcing a full teardown first.
