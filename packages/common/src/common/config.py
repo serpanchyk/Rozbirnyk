@@ -20,6 +20,7 @@ class BaseServiceConfig(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         toml_file="config.toml",
+        env_ignore_empty=True,
         extra="ignore",
     )
 

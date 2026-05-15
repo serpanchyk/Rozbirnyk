@@ -1,4 +1,4 @@
-# ADR 008: Actor Identity and State Management via Character Sheets
+# ADR 007: Actor Identity and State Management via Character Sheets
 
 ## Status
 Accepted

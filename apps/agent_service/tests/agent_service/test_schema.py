@@ -1,7 +1,10 @@
 """Unit tests for agent service configuration schemas."""
 
+import os
+from unittest.mock import patch
+
 import pytest
-from agent_service.schema import MCPServerSettings
+from agent_service.schema import AgentServiceConfig, MCPServerSettings
 from pydantic import ValidationError
 
 
@@ -33,3 +36,58 @@ def test_mcp_server_settings_rejects_invalid_port() -> None:
     """Verify invalid MCP ports fail during configuration validation."""
     with pytest.raises(ValidationError):
         MCPServerSettings(host="wiki_service", port=0)
+
+
+def test_agent_service_config_defaults_langsmith_tracing_to_disabled() -> None:
+    """Verify tracing is opt-in in the default service config."""
+    with patch.dict(os.environ, {}, clear=True):
+        config = AgentServiceConfig(_env_file=None, model={"region_name": "us-east-1"})
+
+    assert config.observability.langsmith.enabled is False
+    assert config.observability.langsmith.project == "rozbirnyk"
+    assert config.model.runtime.max_concurrency == 1
+    assert config.model.runtime.min_seconds_between_calls == 2.0
+    assert config.model.runtime.max_retries == 10
+    assert config.model.runtime.retry_max_seconds == 60.0
+
+
+def test_agent_service_config_rejects_invalid_bedrock_retry_bounds() -> None:
+    """Verify Bedrock runtime config rejects inverted retry bounds."""
+    with pytest.raises(ValidationError, match="retry_max_seconds"):
+        AgentServiceConfig(
+            _env_file=None,
+            model={
+                "region_name": "us-east-1",
+                "runtime": {
+                    "retry_base_seconds": 5,
+                    "retry_max_seconds": 2,
+                },
+            },
+        )
+
+
+def test_agent_service_config_rejects_empty_model_id() -> None:
+    """Verify an explicit empty model id fails fast."""
+    with pytest.raises(ValidationError, match="model_id"):
+        AgentServiceConfig(
+            _env_file=None,
+            model={
+                "region_name": "us-east-1",
+                "model_id": "",
+            },
+        )
+
+
+def test_agent_service_config_rejects_langsmith_enabled_without_api_key() -> None:
+    """Verify tracing cannot be enabled with a placeholder or missing key."""
+    with pytest.raises(ValidationError, match="LangSmith"):
+        AgentServiceConfig(
+            _env_file=None,
+            model={"region_name": "us-east-1"},
+            observability={
+                "langsmith": {
+                    "enabled": True,
+                    "api_key": "lsv2_pt_replace_me",
+                }
+            },
+        )

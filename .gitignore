@@ -154,6 +154,8 @@ weaviate_data/
 
 # Cache
 .cache/
+.local/
+mcp_servers/wiki_service/.wiki-data/
 
 # Node modules (if any JS for frontend)
 node_modules/

@@ -1,4 +1,4 @@
-# ADR 006: Hybrid API/MCP Architecture for Wiki Service
+# ADR 005: Hybrid API/MCP Architecture for Wiki Service
 
 ## Status
 Accepted
@@ -6,7 +6,7 @@ Accepted
 ## Context
 In ADR 005, we established a file-based Markdown Wiki managed via the Model Context Protocol (MCP). However, treating MCP as the *exclusive* interface to the Wiki creates severe orchestration bottlenecks.
 
-System-level operations—such as clearing the Wiki before a new simulation, initializing the directory structure, or serving the `Timeline.md` to the Streamlit frontend—do not require an LLM. Forcing the main `agent_service` or frontend to act as an MCP client for administrative tasks is an anti-pattern. We must separate the "Control Plane" (system administration) from the "Data Plane" (agent tool usage).
+System-level operations—such as clearing the Wiki before a new simulation, initializing the directory structure, or serving the `Timeline.md` to the frontend application—do not require an LLM. Forcing the main `agent_service` or frontend to act as an MCP client for administrative tasks is an anti-pattern. We must separate the "Control Plane" (system administration) from the "Data Plane" (agent tool usage).
 
 The Wiki also has a second responsibility: it must provide bounded, predictable context to agents before they call tools. Agents should not start each turn blind and repeatedly discover files through MCP calls. Instead, the API side of the Wiki provides file metadata and actor-specific file context as part of agent construction.
 
@@ -16,7 +16,7 @@ We will architect the `wiki_service` as a hybrid FastAPI application exposing tw
 ### 1. API Side
 Standard HTTP endpoints support system orchestration, UI integration, and deterministic agent context injection.
 *   `POST /api/v1/wiki/reset`: Deletes and recreates the `States/`, `Actors/`, and `Timeline.md` structure.
-*   `GET /api/v1/wiki/timeline`: Returns the parsed timeline for the Streamlit UI to render.
+*   `GET /api/v1/wiki/timeline`: Returns the parsed timeline for the frontend UI to render.
 *   `GET /api/v1/wiki/export`: Zips the current Wiki state for downloading or saving scenarios.
 *   `GET /api/v1/wiki/files`: Returns the title and short description of every Wiki file.
 *   `GET /api/v1/wiki/actors/{actor_id}/files`: Returns the actor-specific files that must be injected into that Actor's runtime context.
@@ -48,7 +48,7 @@ Agents have zero access to API-side lifecycle endpoints such as reset. API conte
 
 ### Positive
 *   **Separation of Concerns:** Agents are restricted to participating in the simulation; application code maintains absolute control over the simulation lifecycle and context injection.
-*   **UI Simplicity:** Streamlit can fetch the world state using simple `requests.get()` calls without needing a complex MCP client implementation.
+*   **UI Simplicity:** The frontend can fetch the world state using standard HTTP requests without needing a complex MCP client implementation.
 *   **Safety:** Agents cannot discover lifecycle operations, and `Timeline.md` is protected from MCP deletion.
 *   **Context Efficiency:** File titles and short descriptions give every agent a stable map of the Wiki before it decides which full files to read.
 

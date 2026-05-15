@@ -1,4 +1,4 @@
-# ADR 009: Centralized Simulation Orchestration and State Mutation
+# ADR 008: Centralized Simulation Orchestration and State Mutation
 
 ## Status
 Accepted

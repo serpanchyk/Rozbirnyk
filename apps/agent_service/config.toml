@@ -6,12 +6,23 @@ port = 8001
 [logging]
 level = "INFO"
 
+[observability.langsmith]
+enabled = false
+project = "rozbirnyk"
+
 [model]
 provider = "bedrock"
-model_id = "anthropic.claude-sonnet-4-20250514-v1:0"
+model_id = "us.anthropic.claude-sonnet-4-20250514-v1:0"
 region_name = "us-east-1"
 temperature = 0.2
 max_tokens = 4096
+
+[model.runtime]
+max_concurrency = 1
+min_seconds_between_calls = 2.0
+max_retries = 10
+retry_base_seconds = 1.0
+retry_max_seconds = 60.0
 
 [mcp_servers.wiki_service]
 host = "wiki_service"
@@ -22,5 +33,9 @@ endpoint = "mcp/"
 [mcp_servers.news_service]
 host = "news_service"
 port = 8000
-transport = "streamable_http"
-endpoint = "mcp/"
+transport = "sse"
+
+[world_builder]
+max_steps = 8
+max_actors = 8
+max_state_files = 12

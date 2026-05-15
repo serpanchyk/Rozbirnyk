@@ -1,4 +1,4 @@
-# ADR 007: Phased Initialization via the World Builder Agent
+# ADR 006: Phased Initialization via the World Builder Agent
 
 ## Status
 Accepted, amended 2026-05-08
@@ -57,5 +57,5 @@ Once the Wiki is fully populated, the World Builder **terminates**. It does not 
 
 ### Mitigation
 *   The Builder's system prompt will include strict constraints to limit the maximum number of generated actors and state files to prevent context bloat and excessive startup times.
-*   We will leverage the Hybrid API/MCP Architecture (ADR 006) to stream the Builder's progress to the frontend, providing UX feedback to the user while the world is being constructed.
+*   We will leverage the Hybrid API/MCP Architecture (ADR 005) to stream the Builder's progress to the frontend, providing UX feedback to the user while the world is being constructed.
 *   Registry tests fail loudly when required capabilities are missing, role profiles drift from capability bindings, exposed tool names collide, or disallowed Wiki mutation tools appear in the World Builder profile.

@@ -3,6 +3,7 @@
 ```mermaid
 sequenceDiagram
     autonumber
+    participant Backend as Backend
     participant Agent as Agent Service
     participant Registry as Tool Registry
     participant News as News MCP Service
@@ -10,6 +11,7 @@ sequenceDiagram
     participant Tavily as Tavily API
     participant Files as World Wiki Files
 
+    Backend->>Agent: start World Builder run
     Agent->>Registry: resolve tools for role and session
     Registry-->>Agent: role-scoped News and Wiki tools
     Agent->>News: search_recent_news(query)
@@ -20,13 +22,13 @@ sequenceDiagram
     News->>Tavily: extract article
     Tavily-->>News: article content
     News-->>Agent: extracted context
-    Agent->>Wiki: write_state(session_id, path, content)
+    Agent->>Wiki: edit_state_file(path, content, injected session_id)
     Wiki->>Files: persist States/*.md
     Files-->>Wiki: write result
     Wiki-->>Agent: confirmation
-    Agent->>Wiki: append_timeline_event(session_id, event)
-    Wiki->>Files: append Timeline.md
-    Files-->>Wiki: append result
+    Agent->>Wiki: edit_actor_file(actor_id, content, injected session_id)
+    Wiki->>Files: persist Actors/*.md
+    Files-->>Wiki: write result
     Wiki-->>Agent: confirmation
+    Agent-->>Backend: run status + deterministic file summary
 ```
-

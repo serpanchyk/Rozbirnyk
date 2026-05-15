@@ -1,39 +1,30 @@
-# LangGraph Agent Flow
+# Current Agent Flow
 
 ```mermaid
-stateDiagram-v2
-    [*] --> ReceiveScenario
-    ReceiveScenario --> Builder
+flowchart TD
+    start["HTTP run request"]
+    manager["WorldBuilderRunManager"]
+    state["Initial LangGraph state\nscenario + session_id + limits"]
+    model["WorldBuilder model node"]
+    route{"Tool calls?"}
+    news["News MCP tools"]
+    wiki["Wiki MCP tools"]
+    steps{"Remaining\nsteps > 0?"}
+    snapshot["Fetch wiki file metadata\nthrough wiki HTTP API"]
+    summary["Emit progress events\nand final summary"]
+    future["Planned later agents:\nOrchestrator, Actors, Report"]
 
-    state Builder {
-        [*] --> BuilderReason
-        BuilderReason --> NewsTools: needs current context
-        NewsTools --> BuilderReason: research results
-        BuilderReason --> WikiTools: initialize state and actors
-        WikiTools --> BuilderReason: write confirmations
-        BuilderReason --> [*]: initial world ready
-    }
-
-    Builder --> Orchestrator
-
-    state Orchestrator {
-        [*] --> SelectActor
-        SelectActor --> Actor
-        Actor --> ValidateAction
-        ValidateAction --> WikiTools: commit accepted event
-        WikiTools --> SelectActor: updated world
-        ValidateAction --> SelectActor: reject or revise
-        SelectActor --> [*]: stop condition reached
-    }
-
-    Orchestrator --> ReportAgent
-
-    state ReportAgent {
-        [*] --> ReadWiki
-        ReadWiki --> SynthesizeReport
-        SynthesizeReport --> [*]
-    }
-
-    ReportAgent --> [*]
+    start --> manager
+    manager --> state
+    state --> model
+    model --> route
+    route -- "news research" --> news
+    route -- "wiki writes" --> wiki
+    news --> steps
+    wiki --> steps
+    steps -- "yes" --> model
+    route -- "no" --> snapshot
+    steps -- "no" --> snapshot
+    snapshot --> summary
+    summary -. future handoff .-> future
 ```
-

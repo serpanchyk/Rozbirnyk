@@ -40,6 +40,8 @@ Rules:
 - structured JSON logging
 - minimal dependencies
 - production-ready only
+- use Docker Compose to run the project unless the user explicitly asks for a
+  direct per-service local run
 
 Never:
 - use `print()`
@@ -54,8 +56,15 @@ Never:
 If behavior/architecture/config changes:
 - update relevant docs in @docs/
 - update @PROJECT_CONTEXT.md
-
+Other docs rules:
+- don't forget to update tasks and problems if you done changes to any
+- if it's a significant change, add a note to the relevant section in @VISION.md
+- if we came to a significant idea, create the separate ADR in @docs/adr/
+- if you're encountering a problem, check @docs/problems/ for an existing doc before writing a new one
 ---
+
+## Git rules
+- after making any change or ending any task, make the commit
 
 ## Testing
 
@@ -71,8 +80,8 @@ Run:
 
 ## Important Agent Rules
 
-- keep changes minimal/local
 - understand service responsibility first
-- prefer incremental changes over refactors
 - preserve observability
+- when starting the project, read @docs/run-project.md and prefer docker compose way
+  clean reset or explicit container cleanup is needed
 - when reading logs/CLI output, check the tail first

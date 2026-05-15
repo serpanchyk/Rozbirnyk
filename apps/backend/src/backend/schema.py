@@ -24,6 +24,20 @@ class LoggingSettings(BaseModel):
     level: str = Field(default="INFO")
 
 
+class UpstreamSettings(BaseModel):
+    """HTTP endpoints used by backend orchestration."""
+
+    model_config = ConfigDict(extra="forbid")
+    agent_service_url: str = Field(default="http://agent_service:8001")
+    wiki_service_url: str = Field(default="http://wiki_service:8000")
+    cors_allowed_origins: list[str] = Field(
+        default_factory=lambda: [
+            "http://localhost:8501",
+            "http://127.0.0.1:8501",
+        ]
+    )
+
+
 class BackendConfig(BaseServiceConfig):
     """
     Main configuration model for backend.
@@ -31,6 +45,7 @@ class BackendConfig(BaseServiceConfig):
 
     service: ServiceSettings = Field(default_factory=ServiceSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
+    upstream: UpstreamSettings = Field(default_factory=UpstreamSettings)
 
     model_config = BaseServiceConfig.model_config | {"env_nested_delimiter": "__"}
 

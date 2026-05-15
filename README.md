@@ -27,6 +27,11 @@ A simulation run follows four phases:
 The project separates these responsibilities so that agents do not all fetch
 their own conflicting context or mutate shared state independently.
 
+Today, the implemented vertical slice stops after the World Builder phase. The
+frontend, backend, agent-service, and wiki snapshot flow are live; the later
+Simulation Orchestrator, Actor turn loop, and Report Agent remain documented
+target architecture.
+
 ## Repository Layout
 
 ```text
@@ -34,7 +39,7 @@ their own conflicting context or mutate shared state independently.
 ├── apps/
 │   ├── agent_service/      # LangGraph-facing orchestration and MCP integration
 │   ├── backend/            # Backend application boundary
-│   └── frontend/           # Streamlit-facing user interface boundary
+│   └── frontend/           # React/Vite user interface boundary
 ├── mcp_servers/
 │   ├── news_service/       # Tavily-backed MCP tools for current research
 │   └── wiki_service/       # Markdown World Wiki API and MCP tools
@@ -43,8 +48,6 @@ their own conflicting context or mutate shared state independently.
 ├── docs/
 │   ├── VISION.md           # Product and simulation vision
 │   └── adr/                # Architecture decision records
-├── infra/
-│   └── logging/fluentd/    # Local JSON log forwarding pipeline
 ├── docker-compose.yaml
 ├── pyproject.toml
 └── uv.lock
@@ -71,6 +74,9 @@ The planned agent roles are:
 | Simulation Orchestrator | Validate actions and mutate the official world state | Read/write state, actors, and timeline; delete obsolete wiki files |
 | Actor | Propose actions from a durable character sheet | Read state and timeline; append private memory |
 | Report Agent | Produce the final forecast narrative | Read-only access to state, timeline, and actor files |
+
+Only the World Builder execution path is implemented in `agent_service` today.
+The remaining roles are defined as architecture and tool-policy targets.
 
 ### News Service
 
@@ -123,9 +129,8 @@ goals, policies, and private memory.
 - LangChain MCP adapters and LangGraph for orchestration loops
 - AWS Bedrock via `langchain-aws` for production chat models
 - Redis for tool-result caching
-- Streamlit for the frontend boundary
+- React and Vite for the frontend boundary
 - Docker Compose for local service orchestration
-- Fluentd, Elasticsearch, and Kibana for local structured log aggregation
 - Ruff, mypy, pytest, pytest-asyncio, and coverage
 
 ## Configuration
@@ -134,20 +139,37 @@ Non-sensitive service defaults live in each service's `config.toml`. Sensitive
 values and environment-specific overrides belong in `.env` files and environment
 variables.
 
+For Docker Compose, the default startup path uses only the repo-root `.env`.
+Compose reads that file for startup variables, but only the explicitly mapped
+Docker settings are injected into containers. Service-local `.env` files are
+reserved for direct per-service local runs.
+The repo-root `.env.example` includes the default host ports consumed by
+`docker-compose.yaml`: backend `8000`, agent service `8001`, news service
+`8002`, wiki service `8003`, frontend `8501`, and Redis `6379`.
+
 Important configuration values:
 
 | Service | Local config file | Default internal port |
 | --- | --- | --- |
 | Backend | `apps/backend/config.toml` | `8000` |
 | Agent service | `apps/agent_service/config.toml` | `8001` |
-| Frontend | `apps/frontend/config.toml` | `8501` |
-| News service | `mcp_servers/news_service/config.toml` | `8003` |
+| Frontend | `apps/frontend/.env` (`VITE_BACKEND_URL`) | `8501` |
+| News service | `mcp_servers/news_service/config.toml` | `8000` |
 | Wiki service | `mcp_servers/wiki_service/config.toml` | `8000` |
 
 The News service requires a Tavily API key exposed as `TAVILY_API_KEY`.
 The Agent service uses AWS Bedrock model settings in
-`apps/agent_service/config.toml`; AWS credentials should come from normal AWS
-environment variables, shared profiles, or runtime IAM roles.
+`apps/agent_service/config.toml`; for Claude 4 models, prefer an inference
+profile ID or ARN such as `us.anthropic.claude-sonnet-4-20250514-v1:0` instead
+of the raw foundation model ID. Bedrock request pacing and retry behavior lives
+under `model.runtime`, with conservative defaults for concurrency, minimum delay
+between calls, and exponential-backoff throttling retries. AWS credentials
+should come from normal AWS environment variables, shared profiles, or runtime
+IAM roles. In Docker Compose, standard AWS credential variables are passed
+through and `${HOME}/.aws` is mounted read-only for `AWS_PROFILE` unless
+`AWS_SHARED_CREDENTIALS_DIR` overrides the source path. Optional LangSmith
+tracing lives under `observability.langsmith` in `apps/agent_service/config.toml`
+and can be overridden with `OBSERVABILITY__LANGSMITH__*` environment variables.
 
 ## Local Development
 
@@ -163,11 +185,23 @@ Install all extras and development dependencies:
 uv sync --all-extras
 ```
 
+Prepare the shared Docker Compose environment:
+
+```bash
+cp .env.example .env
+```
+
+Set `TAVILY_API_KEY` in `.env` before starting the stack. Compose fails fast if
+the key is missing.
+
 Run the complete local stack:
 
 ```bash
-docker compose up --build
+docker compose up --build -d
 ```
+
+Detailed startup instructions for Docker and per-service local development live in
+`docs/run-project.md`.
 
 Run one service:
 
@@ -207,15 +241,12 @@ The Compose stack includes:
 
 | Container | Purpose | Host port |
 | --- | --- | --- |
-| `rozbirnyk-frontend` | UI boundary | `8501` |
-| `rozbirnyk-backend` | Backend boundary | `8000` |
-| `rozbirnyk-agent` | Agent orchestration service | `8001` |
-| `rozbirnyk-news` | Tavily MCP service | `8002` |
-| `rozbirnyk-wiki` | Wiki API and MCP service | `8003` |
-| `rozbirnyk-redis` | Cache store | `6379` |
-| `rozbirnyk-elasticsearch` | Log storage | `9200` |
-| `rozbirnyk-kibana` | Log exploration UI | `5601` |
-| `rozbirnyk-fluentd` | Log forwarder | `24224` |
+| `frontend` | UI boundary | `8501` |
+| `backend` | Backend boundary | `8000` |
+| `agent-service` | Agent orchestration service | `8001` |
+| `news-service` | Tavily MCP service | `8002` |
+| `wiki-service` | Wiki API and MCP service | `8003` |
+| `redis` | Cache store | `6379` |
 
 Wiki session files are stored in the `wiki-data` Docker volume.
 
@@ -228,8 +259,13 @@ from `contextvars`:
 - `session_id`
 - `user_id`
 
-In Docker Compose, service logs are forwarded through Fluentd into
-Elasticsearch, with Kibana available for local inspection.
+`agent_service` can also emit optional LangSmith traces for World Builder
+workflow runs. When enabled, each trace carries `session_id`, `run_id`, and the
+effective actor/state-file limits so workflow execution can be correlated with
+service logs.
+
+In Docker Compose, inspect service logs directly with `docker compose logs` or
+via the stdout/stderr stream of locally started services.
 
 ## Documentation
 
@@ -245,6 +281,9 @@ Start with:
 - `docs/adr/ADR_007_actors.md` for actor character sheets
 - `docs/adr/ADR_008_simulation_orchestrator.md` for centralized validation
 - `docs/adr/ADR_009_report_agent.md` for final report synthesis
+- `docs/adr/ADR_010_backend_session_api.md` for backend session orchestration
+- `docs/adr/ADR_011_agent_service_world_builder_runtime.md` for run management
+- `docs/adr/ADR_012_frontend_live_progress_ui.md` for the browser UI contract
 
 When code changes alter behavior, architecture, or configuration, update the
 corresponding files in `docs/`.

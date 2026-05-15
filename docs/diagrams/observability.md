@@ -12,9 +12,8 @@ flowchart LR
 
     context["Logging context\ntrace_id\nsession_id\nuser_id"]
     json["JSON structured log events"]
-    fluentd["Fluentd forwarder"]
-    elastic["Elasticsearch"]
-    kibana["Kibana dashboards"]
+    output["stdout / docker compose logs"]
+    tracing["LangSmith traces\nsession_id, run_id,\nmax_actors, max_state_files"]
     operator["Developer or operator"]
 
     context --> frontend
@@ -29,9 +28,8 @@ flowchart LR
     news --> json
     wiki --> json
 
-    json --> fluentd
-    fluentd --> elastic
-    elastic --> kibana
-    operator --> kibana
+    json --> output
+    agent -. optional .-> tracing
+    operator --> output
+    operator --> tracing
 ```
-

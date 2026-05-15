@@ -169,6 +169,19 @@ def test_world_builder_builds_initial_state_with_instance_defaults() -> None:
     assert state["messages"][0].content == "What if Brazil joins OPEC"
 
 
+def test_world_builder_initial_state_includes_limits_when_provided() -> None:
+    """Verify limit fields are propagated into the initial graph state."""
+    state = build_world_builder_initial_state(
+        scenario="Brazil joins OPEC",
+        session_id="scenario-2",
+        max_actors=3,
+        max_state_files=5,
+    )
+
+    assert state["max_actors"] == 3
+    assert state["max_state_files"] == 5
+
+
 def test_world_builder_graph_rejects_models_without_tool_binding() -> None:
     """Verify graph construction fails if the model cannot bind tools."""
     with pytest.raises(TypeError, match="bind_tools"):

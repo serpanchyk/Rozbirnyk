@@ -1,6 +1,6 @@
 """Define state passed through the World Builder graph."""
 
-from typing import Annotated, TypedDict
+from typing import Annotated, NotRequired, TypedDict
 
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
@@ -13,3 +13,5 @@ class WorldBuilderState(TypedDict):
     scenario: str
     session_id: str
     remaining_steps: int
+    max_actors: NotRequired[int]
+    max_state_files: NotRequired[int]

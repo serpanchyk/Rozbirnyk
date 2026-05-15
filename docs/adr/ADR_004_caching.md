@@ -17,7 +17,7 @@ We will implement a resilient, Redis-backed caching layer in the `common` packag
 *   **Singleton Connection:** `get_redis()` ensures only one connection pool is created per application instance, configured via Pydantic `CacheSettings`.
 
 ### 2. Graceful Degradation
-The caching layer wraps Redis `GET` and `SET` operations in `try...except ConnectionError` blocks. If the Redis container (`rozbirnyk-redis`) is unavailable or crashes:
+The caching layer wraps Redis `GET` and `SET` operations in `try...except ConnectionError` blocks. If the Redis Compose service/container is unavailable or crashes:
 *   The system logs a warning/error.
 *   The cache layer explicitly bypasses Redis.
 *   The underlying tool executes normally.

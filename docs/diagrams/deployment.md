@@ -3,37 +3,35 @@
 ```mermaid
 flowchart TB
     subgraph compose["Docker Compose network"]
-        frontend["rozbirnyk-frontend\nhost 8501"]
-        backend["rozbirnyk-backend\nhost 8000"]
-        agent["rozbirnyk-agent\nhost 8001"]
-        news["rozbirnyk-news\nhost 8002"]
-        wiki["rozbirnyk-wiki\nhost 8003"]
-        redis["rozbirnyk-redis\nhost 6379"]
-        fluentd["rozbirnyk-fluentd\nhost 24224"]
-        elastic["rozbirnyk-elasticsearch\nhost 9200"]
-        kibana["rozbirnyk-kibana\nhost 5601"]
+        frontend["frontend service\nhost 8501"]
+        backend["backend service\nhost 8000"]
+        agent["agent-service\nhost 8001"]
+        news["news-service\nhost 8002"]
+        wiki["wiki-service\nhost 8003"]
+        redis["redis service\nhost 6379"]
     end
 
     browser["Browser"]
     tavily["Tavily API"]
     bedrock["AWS Bedrock"]
+    langsmith["LangSmith (optional)"]
     wiki_volume[("wiki-data volume")]
+    logs["docker compose logs"]
 
     browser --> frontend
-    frontend --> backend
-    backend --> agent
-    agent --> news
-    agent --> wiki
+    frontend -->|"HTTP + SSE"| backend
+    backend -->|"HTTP"| agent
+    backend -->|"HTTP"| wiki
+    agent -->|"MCP over HTTP"| news
+    agent -->|"MCP over HTTP"| wiki
     news --> redis
     news --> tavily
     agent --> bedrock
+    agent -. optional .-> langsmith
     wiki --> wiki_volume
-    frontend -. logs .-> fluentd
-    backend -. logs .-> fluentd
-    agent -. logs .-> fluentd
-    news -. logs .-> fluentd
-    wiki -. logs .-> fluentd
-    fluentd --> elastic
-    kibana --> elastic
+    frontend -. logs .-> logs
+    backend -. logs .-> logs
+    agent -. logs .-> logs
+    news -. logs .-> logs
+    wiki -. logs .-> logs
 ```
-
