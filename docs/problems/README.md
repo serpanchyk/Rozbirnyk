@@ -15,5 +15,6 @@ Each problem file should capture:
 
 Current problems:
 
-- `bedrock-rate-limits.md`
-- `docker-compose-clean-startup.md`
+- `backlog/bedrock-throttling-regression.md`
+- `backlog/runtime-log-hygiene-and-correlation-gaps.md`
+- `backlog/world-builder-events-polling-noise.md`
