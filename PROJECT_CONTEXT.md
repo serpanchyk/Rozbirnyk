@@ -56,7 +56,9 @@ next.
 - Record in-progress work, blockers, or near-term priorities as short bullets.
 - Remove stale items instead of letting the list grow forever.
 
-- No active tasks recorded.
+- Simplify the frontend session UI by removing the visible session ID and
+  adding a clickable Markdown file browser for timeline, state, and actor
+  files.
 
 ## Recent Decisions / Notes
 

@@ -19,5 +19,5 @@ Each task file should capture:
 Current task folders:
 
 - `done/` contains completed tasks migrated from the former `TASKS.md`
-- `backlog/` is empty
+- `backlog/` contains active planned work
 - `blocked/` is empty
