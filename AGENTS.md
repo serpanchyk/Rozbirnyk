@@ -60,7 +60,7 @@ Other docs rules:
 - don't forget to update tasks and problems if you done changes to any
 - if it's a significant change, add a note to the relevant section in @VISION.md
 - if we came to a significant idea, create the separate ADR in @docs/adr/
-
+- if you're encountering a problem, check @docs/problems/ for an existing doc before writing a new one
 ---
 
 ## Git rules
